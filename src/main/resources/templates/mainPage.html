@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MomentTalk</title>
+    <style>
+        /* Reset and global styles */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .container:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .header {
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            color: #ffffff;
+            padding: 20px;
+            font-size: 1.8rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .content {
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .content p {
+            font-size: 1rem;
+            margin-bottom: 20px;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .options a {
+            display: block;
+            background-color: #6366f1;
+            color: #ffffff;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-align: center;
+        }
+
+        .options a:hover {
+            background-color: #4f46e5;
+            transform: translateY(-3px);
+        }
+
+        .footer {
+            padding: 20px;
+            background: #f9fafb;
+            font-size: 0.85rem;
+            color: #6b7280;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer a {
+            color: #6366f1;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+
+        .modal-content .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .modal-content .options a {
+            background-color: #6366f1;
+            color: #ffffff;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-content .options a:hover {
+            background-color: #4f46e5;
+        }
+
+        .modal-content .close {
+            margin-top: 20px;
+            color: #6366f1;
+            cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                font-size: 1.6rem;
+            }
+
+            .content p {
+                font-size: 0.95rem;
+            }
+
+            .options a {
+                font-size: 0.95rem;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        MomentTalk
+    </div>
+    <div class="content">
+        <p>Discover new connections and have fun with our features. Choose an option below to start!</p>
+        <div class="options">
+            <a href="/instant-connect" th:href="@{/instant-connect}">Instant Connection</a>
+            <a href="#" id="openModalChat">Interest-based Chat</a>
+            <a href="#" id="openModalGroup">Interest-based Group Chats</a>
+            <a href="/mini-games" th:href="@{/mini-games}">Play Mini Games</a>
+        </div>
+    </div>
+    <div class="footer">
+        <p>Designed with care by <a href="https://github.com/I-migi" th:href="@{'https://github.com/I-migi'}">I-migi</a></p>
+    </div>
+</div>
+
+<!-- Modal for Interest-based Chat -->
+<div class="modal" id="modalChat">
+    <div class="modal-content">
+        <h3>Select Your Interest</h3>
+        <div class="options">
+            <a href="/chat?category=technology" th:href="@{/chat(category='technology')}">Technology</a>
+            <a href="/chat?category=sports" th:href="@{/chat(category='sports')}">Sports</a>
+            <a href="/chat?category=movies" th:href="@{/chat(category='movies')}">Movies</a>
+            <a href="/chat?category=music" th:href="@{/chat(category='music')}">Music</a>
+        </div>
+        <div class="close" id="closeModalChat">Cancel</div>
+    </div>
+</div>
+
+<!-- Modal for Interest-based Group Chats -->
+<div class="modal" id="modalGroup">
+    <div class="modal-content">
+        <h3>Select Your Group Interest</h3>
+        <div class="options">
+            <a href="/group-chat?category=technology" th:href="@{/group-chat(category='technology')}">Technology Groups</a>
+            <a href="/group-chat?category=sports" th:href="@{/group-chat(category='sports')}">Sports Groups</a>
+            <a href="/group-chat?category=movies" th:href="@{/group-chat(category='movies')}">Movies Groups</a>
+            <a href="/group-chat?category=music" th:href="@{/group-chat(category='music')}">Music Groups</a>
+        </div>
+        <div class="close" id="closeModalGroup">Cancel</div>
+    </div>
+</div>
+
+<script>
+    // Get modal elements
+    const modalChat = document.getElementById('modalChat');
+    const modalGroup = document.getElementById('modalGroup');
+
+    const openModalChat = document.getElementById('openModalChat');
+    const openModalGroup = document.getElementById('openModalGroup');
+
+    const closeModalChat = document.getElementById('closeModalChat');
+    const closeModalGroup = document.getElementById('closeModalGroup');
+
+    // Open modals
+    openModalChat.addEventListener('click', () => {
+        modalChat.classList.add('active');
+    });
+
+    openModalGroup.addEventListener('click', () => {
+        modalGroup.classList.add('active');
+    });
+
+    // Close modals
+    closeModalChat.addEventListener('click', () => {
+        modalChat.classList.remove('active');
+    });
+
+    closeModalGroup.addEventListener('click', () => {
+        modalGroup.classList.remove('active');
+    });
+
+    // Close modals when clicking outside
+    window.addEventListener('click', (event) => {
+        if (event.target === modalChat) {
+            modalChat.classList.remove('active');
+        }
+        if (event.target === modalGroup) {
+            modalGroup.classList.remove('active');
+        }
+    });
+</script>
+</body>
+</html>

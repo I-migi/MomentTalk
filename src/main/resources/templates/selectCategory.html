@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Your Interests</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #4b5563;
+        }
+
+        .categories {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .categories a {
+            display: block;
+            background-color: #6366f1;
+            color: #ffffff;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .categories a:hover {
+            background-color: #4f46e5;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">Choose Your Interest</div>
+    <div class="categories">
+        <a href="/chat?category=technology" th:href="@{/chat(category='technology')}">Technology</a>
+        <a href="/chat?category=sports" th:href="@{/chat(category='sports')}">Sports</a>
+        <a href="/chat?category=movies" th:href="@{/chat(category='movies')}">Movies</a>
+        <a href="/chat?category=music" th:href="@{/chat(category='music')}">Music</a>
+        <a href="/chat?category=gaming" th:href="@{/chat(category='gaming')}">Gaming</a>
+    </div>
+</div>
+</body>
+</html>
