@@ -8,12 +8,19 @@ spring:
     username: ${DATABASE_USER_NAME}
     password: ${DATABASE_USER_PASSWORD}
     driver-class-name: ${DATABASE_DRIVER}
-
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     show-sql: true
     properties:
       hibernate:
         format_sql: true
     open-in-view: false
+  session:
+    store-type: redis
+  cache:
+    type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379

@@ -19,8 +19,15 @@ public class User extends AbstractBaseTime {
     @Column(unique = true)
     private String sessionId;
 
+    private boolean isActive;
+
     public User(String userName, String sessionId) {
         this.userName = userName;
         this.sessionId = sessionId;
+        this.isActive = true;
+    }
+
+    public void expireSession() {
+        this.isActive = false;
     }
 }
