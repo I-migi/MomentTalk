@@ -11,13 +11,5 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    public void checkUserIsExists(String sessionId) {
-        User user = userRepository.findBySessionId(sessionId).orElse(null);
 
-        if ( user == null) {
-            String userName = "Anonymous_" + sessionId.substring(0, 8);
-            user = new User(userName, sessionId);
-            userRepository.save(user);
-        }
-    }
 }
