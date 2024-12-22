@@ -39,8 +39,13 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket' // WebSocket 지원
+    implementation 'org.springframework:spring-messaging' // WebSocket 메시징 지원
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0' // Use the latest version
+
+
 }
 
-tasks.named('test') {
+test {
     useJUnitPlatform()
 }

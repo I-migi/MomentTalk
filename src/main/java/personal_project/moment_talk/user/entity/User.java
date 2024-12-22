@@ -14,11 +14,14 @@ public class User extends AbstractBaseTime {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Anonymous + sessionId (익명)
     private String userName;
 
+    // 클라이언트 쿠키에 JSESSIONID 로 저장
     @Column(unique = true)
     private String sessionId;
 
+    // 활성화 여부 -> 현재 접속중인 유저로 사용할 예정
     private boolean isActive;
 
     public User(String userName, String sessionId) {
@@ -27,6 +30,7 @@ public class User extends AbstractBaseTime {
         this.isActive = true;
     }
 
+    // 비활성화
     public void expireSession() {
         this.isActive = false;
     }

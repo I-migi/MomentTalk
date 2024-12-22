@@ -10,7 +10,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            background-color: #eaf1fc; /* Subtle gradient background */
             color: #1f2937;
             display: flex;
             justify-content: center;
@@ -19,155 +19,97 @@
         }
 
         .container {
-            width: 100%;
-            max-width: 400px;
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            width: 512px; /* Maintain the same dimensions */
+            height: 896px;
+            background: linear-gradient(145deg, #ffffff, #f0f4fa);
+            border-radius: 25px;
+            box-shadow: 10px 10px 20px #d0d8e4, -10px -10px 20px #ffffff;
             overflow: hidden;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .container:hover {
-            transform: scale(1.02);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+            transform: scale(1.03);
+            box-shadow: 12px 12px 24px #c7cedb, -12px -12px 24px #ffffff;
         }
 
         .header {
-            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            background: linear-gradient(90deg, #5e72eb, #8f6ef3);
             color: #ffffff;
-            padding: 20px;
-            font-size: 1.8rem;
-            font-weight: 600;
+            padding: 25px;
+            font-size: 2rem;
+            font-weight: 700;
             text-align: center;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         .content {
-            padding: 30px 20px;
+            padding: 40px 30px;
             text-align: center;
         }
 
         .content p {
-            font-size: 1rem;
-            margin-bottom: 20px;
-            color: #4b5563;
-            line-height: 1.6;
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            color: #374151;
+            line-height: 1.8;
         }
 
         .options {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
         }
 
         .options a {
             display: block;
-            background-color: #6366f1;
+            background-color: #5e72eb;
             color: #ffffff;
-            padding: 14px;
-            font-size: 1rem;
-            font-weight: 500;
-            border-radius: 10px;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 15px;
             text-decoration: none;
             transition: background-color 0.3s ease, transform 0.2s ease;
             text-align: center;
+            box-shadow: 5px 5px 15px rgba(94, 114, 235, 0.2);
         }
 
         .options a:hover {
-            background-color: #4f46e5;
-            transform: translateY(-3px);
+            background-color: #4e60d9;
+            transform: translateY(-5px);
+            box-shadow: 8px 8px 20px rgba(78, 96, 217, 0.3);
         }
 
         .footer {
             padding: 20px;
-            background: #f9fafb;
+            background: #eef3fd;
             font-size: 0.85rem;
             color: #6b7280;
             text-align: center;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid #d1d5db;
         }
 
         .footer a {
-            color: #6366f1;
+            color: #5e72eb;
             text-decoration: none;
+            font-weight: 500;
         }
 
         .footer a:hover {
             text-decoration: underline;
         }
 
-        /* Modal Styles */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+        .active-user {
+            margin: 20px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4b5563;
         }
 
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: #ffffff;
-            border-radius: 15px;
-            padding: 20px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            text-align: center;
-        }
-
-        .modal-content h3 {
-            margin-bottom: 20px;
-            color: #1f2937;
-        }
-
-        .modal-content .options {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .modal-content .options a {
-            background-color: #6366f1;
-            color: #ffffff;
-            padding: 12px;
-            font-size: 1rem;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: background-color 0.3s ease;
-        }
-
-        .modal-content .options a:hover {
-            background-color: #4f46e5;
-        }
-
-        .modal-content .close {
-            margin-top: 20px;
-            color: #6366f1;
-            cursor: pointer;
-        }
-
-        @media (max-width: 600px) {
-            .header {
-                font-size: 1.6rem;
-            }
-
-            .content p {
-                font-size: 0.95rem;
-            }
-
-            .options a {
-                font-size: 0.95rem;
-                padding: 12px;
-            }
+        /* Button shadow for active user */
+        .active-user span {
+            color: #5e72eb;
         }
     </style>
 </head>
@@ -177,44 +119,19 @@
         MomentTalk
     </div>
     <div class="content">
-        <p>Discover new connections and have fun with our features. Choose an option below to start!</p>
+        <p>새로운 인연을 만나고 재미있는 기능을 즐겨보세요. <br> 아래에서 시작할 옵션을 선택하세요!</p>
+        <div class="active-user">
+            활성 사용자 수: <span id="activeUserCount">0</span>
+        </div>
         <div class="options">
-            <a href="/instant-connect" th:href="@{/instant-connect}">Instant Connection</a>
-            <a href="#" id="openModalChat">Interest-based Chat</a>
-            <a href="#" id="openModalGroup">Interest-based Group Chats</a>
-            <a href="/mini-games" th:href="@{/mini-games}">Play Mini Games</a>
+            <a href="/instant-connect" th:href="@{/instant-connect}">즉석 연결</a>
+            <a href="#" id="openModalChat">관심사 기반 채팅</a>
+            <a href="#" id="openModalGroup">관심사 기반 그룹 채팅</a>
+            <a href="/mini-games" th:href="@{/mini-games}">미니 게임 즐기기</a>
         </div>
     </div>
     <div class="footer">
-        <p>Designed with care by <a href="https://github.com/I-migi" th:href="@{'https://github.com/I-migi'}">I-migi</a></p>
-    </div>
-</div>
-
-<!-- Modal for Interest-based Chat -->
-<div class="modal" id="modalChat">
-    <div class="modal-content">
-        <h3>Select Your Interest</h3>
-        <div class="options">
-            <a href="/chat?category=technology" th:href="@{/chat(category='technology')}">Technology</a>
-            <a href="/chat?category=sports" th:href="@{/chat(category='sports')}">Sports</a>
-            <a href="/chat?category=movies" th:href="@{/chat(category='movies')}">Movies</a>
-            <a href="/chat?category=music" th:href="@{/chat(category='music')}">Music</a>
-        </div>
-        <div class="close" id="closeModalChat">Cancel</div>
-    </div>
-</div>
-
-<!-- Modal for Interest-based Group Chats -->
-<div class="modal" id="modalGroup">
-    <div class="modal-content">
-        <h3>Select Your Group Interest</h3>
-        <div class="options">
-            <a href="/group-chat?category=technology" th:href="@{/group-chat(category='technology')}">Technology Groups</a>
-            <a href="/group-chat?category=sports" th:href="@{/group-chat(category='sports')}">Sports Groups</a>
-            <a href="/group-chat?category=movies" th:href="@{/group-chat(category='movies')}">Movies Groups</a>
-            <a href="/group-chat?category=music" th:href="@{/group-chat(category='music')}">Music Groups</a>
-        </div>
-        <div class="close" id="closeModalGroup">Cancel</div>
+        <p>Developed with care by <a href="https://github.com/I-migi" th:href="@{'https://github.com/I-migi'}">I-migi</a></p>
     </div>
 </div>
 
@@ -228,6 +145,23 @@
 
     const closeModalChat = document.getElementById('closeModalChat');
     const closeModalGroup = document.getElementById('closeModalGroup');
+
+    fetch('/active-count')
+        .then(response => response.json())
+        .then(data => {
+            // 숫자 값이 바로 반환되는 경우
+            if (typeof data === 'number') {
+                document.getElementById('activeUserCount').textContent = data;
+            }
+            // 객체로 반환되는 경우
+            else if (typeof data === 'object' && data.value) {
+                document.getElementById('activeUserCount').textContent = data.value;
+            } else {
+                console.error('Unexpected data format:', data);
+            }
+        })
+        .catch(error => console.error('Error fetching active user count:', error));
+
 
     // Open modals
     openModalChat.addEventListener('click', () => {

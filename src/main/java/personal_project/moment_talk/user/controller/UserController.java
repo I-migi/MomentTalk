@@ -4,20 +4,26 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import personal_project.moment_talk.session.service.SessionService;
+import org.springframework.web.bind.annotation.ResponseBody;
 import personal_project.moment_talk.user.service.UserService;
+import personal_project.moment_talk.user.service.UserSessionService;
 
 @Controller
 @RequiredArgsConstructor
 public class UserController {
 
-    private final SessionService sessionService;
+    private final UserSessionService userSessionService;
+    private final UserService userService;
 
+    /*
+    1. HttpSession 을 받아 sessionId GET
+    2. sessionService 에서 checkSession 실행
+     */
     @GetMapping("/")
     public String mainPage(HttpSession session) {
 
         String sessionId = session.getId();
-        sessionService.checkSession(sessionId);
+        userSessionService.checkSession(sessionId);
 
         return "mainPage";
     }
@@ -25,5 +31,11 @@ public class UserController {
     @GetMapping("/select-category")
     public String selectCategory() {
         return "selectCategory";
+    }
+
+    @ResponseBody
+    @GetMapping("/active-count")
+    public long getActiveUserCount() {
+        return userService.getActiveUserCount();
     }
 }
