@@ -1,4 +1,4 @@
-package personal_project.moment_talk.session.config;
+package personal_project.moment_talk.common.redis;
 
 
 import lombok.RequiredArgsConstructor;
@@ -22,6 +22,10 @@ public class RedisKeyExpirationListener implements MessageListener {
         handleExpiredKey(expiredKey);
     }
 
+    /*
+    레디스의 캐시가 만료되었을 때 해당 캐시에서 sessionId 를 Extract
+    userRepository 에서 User 를 찾고 isActive 상태를 false 로 변경 -> User 비활성화
+     */
     private void handleExpiredKey(String key) {
 
         String sessionId = extractSessionIdFromKey(key);
