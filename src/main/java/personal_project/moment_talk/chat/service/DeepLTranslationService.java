@@ -15,6 +15,7 @@ import org.springframework.util.MultiValueMap;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +32,19 @@ public class DeepLTranslationService {
     @Value("${DEEPL_API_END_POINT}")
     private String endPoint;
 
+    private static final Map<String, String > fixedTranslations = new HashMap<>();
+
+    static {
+        fixedTranslations.put("hello", "안녕하세요");
+    }
+
+
     public String translate(String text) {
+
+        if (fixedTranslations.containsKey(text.toLowerCase())) {
+            return fixedTranslations.get(text.toLowerCase());
+        }
+
         String detectedLanguage = detectLanguage(text); // 텍스트가 한글인지 영어인지 감지
         String targetLanguage = detectedLanguage.equals("ko") ? "en" : "ko";
 
