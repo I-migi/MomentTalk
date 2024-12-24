@@ -131,7 +131,13 @@
             max-width: 70%;
             word-wrap: break-word;
         }
+        .message-received, .message-sent {
+            display: flex; /* 기본적으로 보이도록 설정 */
+        }
 
+        .message-hidden {
+            display: none; /* 숨김 상태 */
+        }
         #chatMessages .message-received {
             background-color: #4a5568;
             color: #ffffff;
@@ -197,7 +203,9 @@
     <div id="status">새로운 친구를 만나보세요!</div>
     <button id="connectButton">매칭하기</button>
     <div id="chatBox">
-        <div id="chatMessages"></div>
+        <div id="chatMessages">
+            <div id="olderMessageNotice" style="display: none; text-align: center; color: #bbb; margin-bottom: 10px;">
+            이전 메시지는 볼 수 없습니다.</div></div>
         <div id="chatInput">
             <input type="text" id="messageInput" placeholder="Type your message...">
             <button id="sendButton">Send</button>
@@ -267,7 +275,26 @@
             resetUI();
         };
     }
+    function isOlderThanFiveMinutes(messageTime) {
+        const now = new Date();
+        const messageDate = new Date(messageTime);
+        return now - messageDate > 5* 60 * 1000; // 5분 이상 지났는지 확인
+    }
 
+    function parseTimeToDate(timeString) {
+        const [period, time] = timeString.split(" ");
+        const [hours, minutes] = time.split(":").map(Number);
+
+        let fullHours = hours;
+        if (period === "오후" && hours !== 12) {
+            fullHours += 12;
+        } else if (period === "오전" && hours === 12) {
+            fullHours = 0;
+        }
+
+        const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate(), fullHours, minutes);
+    }
     function resetUI() {
         statusDiv.textContent = "매칭하기";
         statusDiv.style.display = "block";
@@ -306,6 +333,30 @@
         }
     });
 
+
+    chatMessages.addEventListener("scroll", () => {
+        const messages = chatMessages.querySelectorAll(".message-received, .message-sent");
+        let olderMessageExists = false;
+
+        messages.forEach(message => {
+            const timeElement = message.querySelector(".message-time");
+            if (timeElement) {
+                const timeText = timeElement.textContent; // 예: "오후 06:20"
+                const messageTime = parseTimeToDate(timeText);
+
+                if (isOlderThanFiveMinutes(messageTime)) {
+                    message.style.display = "none"; // 5분 이상 지난 메시지 숨기기
+                    olderMessageExists = true;
+                } else {
+                    message.style.display = "flex"; // 최신 메시지는 보이기
+                }
+            }
+        });
+
+        // "5분 전 메시지는 볼 수 없습니다" 표시
+        const olderMessageNotice = document.getElementById("olderMessageNotice");
+        olderMessageNotice.style.display = olderMessageExists ? "block" : "none";
+    });
     function sendMessage() {
         const message = messageInput.value.trim();
 
@@ -315,10 +366,11 @@
             const messageDiv = document.createElement("div");
             messageDiv.className = "message-sent";
 
-            // 현재 시간 추가
-            const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const currentTime = new Date();
+            const timeString = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            messageDiv.innerHTML = `<span>You: ${message}</span> <span class="message-time">${currentTime}</span>`;
+            messageDiv.setAttribute("data-timestamp", currentTime.toISOString()); // 시간 저장
+            messageDiv.innerHTML = `<span>You: ${message}</span> <span class="message-time">${timeString}</span>`;
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
             messageInput.value = "";
