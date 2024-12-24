@@ -67,6 +67,25 @@
             box-shadow: 7px 7px 20px rgba(90, 103, 216, 0.4);
         }
 
+        #backButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: linear-gradient(90deg, #ff7e5f, #feb47b);
+            color: #ffffff;
+            border: none;
+            border-radius: 15px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+            box-shadow: 5px 5px 15px rgba(255, 126, 95, 0.3);
+        }
+
+        #backButton:hover {
+            background: linear-gradient(90deg, #ff6a3d, #fd935d);
+            transform: translateY(-4px);
+            box-shadow: 7px 7px 20px rgba(255, 106, 61, 0.4);
+        }
+
         #chatBox {
             display: none;
             flex-direction: column;
@@ -94,6 +113,14 @@
             box-sizing: border-box; /* Ensure padding doesn't overflow the width */
         }
 
+        #chatMessages .message-time {
+            font-size: 0.8rem;
+            color: #bbb;
+            margin-left: 10px;
+            align-self: flex-end; /* 시간을 오른쪽에 정렬 */
+        }
+
+
         #chatMessages .message-sent {
             background-color: #667eea;
             color: #ffffff;
@@ -114,6 +141,25 @@
             border-radius: 20px 20px 20px 0;
             max-width: 70%;
             word-wrap: break-word;
+            position: relative;
+            display: flex; /* 버튼 정렬을 위한 플렉스 컨테이너 */
+            align-items: center; /* 세로 중앙 정렬 */
+        }
+
+        #chatMessages .message-received:hover .translate-button {
+            display: inline-block; /* 마우스를 올릴 때만 보이도록 설정 */
+        }
+
+        .translate-button {
+            display: none; /* 기본적으로 숨김 */
+            margin-left: 10px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            background: #f1f1f1;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
         }
 
         #chatInput {
@@ -156,6 +202,7 @@
             <input type="text" id="messageInput" placeholder="Type your message...">
             <button id="sendButton">Send</button>
         </div>
+        <button id="backButton">뒤로가기</button> <!-- Add here -->
     </div>
 </div>
 <script>
@@ -166,42 +213,49 @@
     const sendButton = document.getElementById("sendButton");
     const connectButton = document.getElementById("connectButton");
 
+    const backButton = document.getElementById("backButton");
+
+    backButton.addEventListener("click", () => {
+        resetUI();
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.close(); // Close the WebSocket connection on exit
+        }
+    });
+
+
+
+
     let socket = null;
 
     // Initialize WebSocket
     function initWebSocket() {
         socket = new WebSocket("ws://localhost:8080/ws/connect");
+        // socket = new WebSocket("ws://192.168.129.100:8080/ws/connect");
 
         socket.onopen = () => {
-            console.log("WebSocket connected");
             statusDiv.textContent = "새로운 친구를 찾는 중...";
         };
 
         socket.onmessage = (event) => {
-            console.log("Message received: ", event.data);
-
             if (event.data.startsWith("MATCH_SUCCESS:")) {
                 const opponentUser = event.data.split(":")[1];
                 statusDiv.style.display = "none";
                 connectButton.style.display = "none";
-                chatBox.style.display = "flex"; // Show chatbox
-                console.log("Matched with user: ", opponentUser);
-            } else if (event.data === "WAITING_FOR_MATCH") {
-                statusDiv.textContent = "새로운 친구를 찾는 중...";
-            } else if (event.data === "NO_MATCH_FOUND") {
-                alert("채팅을 원하는 친구가 없습니다. 몇 분 후 다시 시도해주세요");
-                resetUI();
-            } else if (event.data === "USER_DISCONNECTED") {
-                alert("상대방이 채팅방에서 나갔습니다.");
-                resetUI();
+                chatBox.style.display = "flex";
             } else {
+                const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
                 const messageDiv = document.createElement("div");
                 messageDiv.className = "message-received";
-                messageDiv.textContent = event.data;
+
+                messageDiv.innerHTML = `<span>${event.data}</span>
+                                <button class="translate-button" data-message="${event.data}">번역</button>
+                                <span class="message-time">${currentTime}</span>`;
                 chatMessages.appendChild(messageDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
         };
+
 
         socket.onclose = () => {
             console.log("WebSocket closed");
@@ -220,11 +274,12 @@
         connectButton.style.display = "inline-block";
         connectButton.disabled = false;
         chatBox.style.display = "none";
-        chatMessages.innerHTML = "";
+        chatMessages.innerHTML = ""; // Clear chat messages
         if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.close();
+            socket.close(); // Ensure the WebSocket is closed
         }
     }
+
 
     connectButton.addEventListener("click", () => {
         connectButton.disabled = true;
@@ -256,9 +311,14 @@
 
         if (message && socket && socket.readyState === WebSocket.OPEN) {
             socket.send(message);
+
             const messageDiv = document.createElement("div");
             messageDiv.className = "message-sent";
-            messageDiv.textContent = `You: ${message}`;
+
+            // 현재 시간 추가
+            const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            messageDiv.innerHTML = `<span>You: ${message}</span> <span class="message-time">${currentTime}</span>`;
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
             messageInput.value = "";
@@ -267,6 +327,50 @@
         }
     }
 
+
+    document.addEventListener("click", async (event) => {
+        if (event.target.classList.contains("translate-button")) {
+            const button = event.target;
+            const originalMessage = button.getAttribute("data-message");
+
+            // 번역 요청
+            const translatedMessage = await translateMessage(originalMessage);
+
+            if (translatedMessage) {
+                // URL 디코딩하여 사용자에게 표시
+                const decodedMessage = decodeURIComponent(translatedMessage);
+
+                // 원래 메시지 대체
+                const messageElement = button.previousElementSibling;
+                messageElement.textContent = decodedMessage;
+
+                // 버튼 제거 또는 "번역 완료" 표시
+                button.textContent = "번역 완료";
+                button.disabled = true;
+            }
+        }
+    });
+
+    async function translateMessage(message) {
+        try {
+            const response = await fetch("/translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: message }) // targetLanguage 제거
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                return data.translatedText; // 번역된 텍스트 반환
+            } else {
+                console.error("Translation failed");
+                return null;
+            }
+        } catch (error) {
+            console.error("Error during translation:", error);
+            return null;
+        }
+    }
 
 
     window.addEventListener("beforeunload", () => {
