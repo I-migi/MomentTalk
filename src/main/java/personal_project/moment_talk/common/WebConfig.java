@@ -36,6 +36,7 @@ public class WebConfig implements WebMvcConfigurer {
         return new RestTemplate();
     }
 
+    // 오픈 라이브러리 사용
     @Bean
     public BadWordFiltering badWordFiltering() {
         return new BadWordFiltering();
