@@ -1,5 +1,6 @@
 package personal_project.moment_talk.common;
 
+import com.vane.badwordfiltering.BadWordFiltering;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,5 +34,11 @@ public class WebConfig implements WebMvcConfigurer {
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
+    }
+
+    // 오픈 라이브러리 사용
+    @Bean
+    public BadWordFiltering badWordFiltering() {
+        return new BadWordFiltering();
     }
 }

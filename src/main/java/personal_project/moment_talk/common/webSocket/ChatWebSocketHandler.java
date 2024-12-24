@@ -1,5 +1,6 @@
 package personal_project.moment_talk.common.webSocket;
 
+import com.vane.badwordfiltering.BadWordFiltering;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -27,6 +28,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
      */
     private final QueueService queueService;
     private final ChatService chatService;
+
+    private final BadWordFiltering badWordFiltering;
 
     // 현재 활성화된 WebSocket 세션 관리.
     private final ConcurrentHashMap<String, WebSocketSession> sessionMap = new ConcurrentHashMap<>();
@@ -151,7 +154,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         if (opponentUser != null) {
             WebSocketSession opponentSession = sessionMap.get(opponentUser);
             if (opponentSession != null && opponentSession.isOpen()) {
-                sendMessageSafely(opponentSession, message.getPayload().toString());
+                if (!badWordFiltering.check(message.getPayload().toString())) {
+                    sendMessageSafely(opponentSession, message.getPayload().toString());
+                } else {
+                    sendMessageSafely(opponentSession, "*****");
+                }
+
             } else {
                 log.info("Opponent session is closed. Removing match.");
                 chatService.removeMatch(sessionId);

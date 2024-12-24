@@ -25,7 +25,7 @@ repositories {
 
 dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-
+    implementation 'io.github.vaneproject:badwordfiltering:1.0.0'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.data:spring-data-redis:3.2.0'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
