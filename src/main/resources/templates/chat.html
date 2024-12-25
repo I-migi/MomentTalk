@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+</head>
+<link rel="stylesheet" href="/css/chat.css" th:href="@{/css/chat.css}" />
+<body>
+<div class="container">
+    <div id="status">새로운 친구를 만나보세요!</div>
+    <button id="connectButton">매칭하기</button>
+    <div id="chatBox">
+        <div id="chatMessages">
+            <div id="olderMessageNotice" style="display: none; text-align: center; color: #bbb; margin-bottom: 10px;">
+            이전 메시지는 볼 수 없습니다.</div></div>
+        <div id="chatInput">
+            <input type="text" id="messageInput" placeholder="Type your message...">
+            <input type="file" id="fileInput" accept="image/*,video/*" style="display: none;" />
+            <label for="fileInput" id="fileUploadButton">📎</label>
+            <button id="sendButton">Send</button>
+        </div>
+        <button id="backButton">뒤로가기</button> <!-- Add here -->
+    </div>
+</div>
+</body>
+<script src="/js/chat.js" th:src="@{/js/chat.js}"></script>
+</html>
