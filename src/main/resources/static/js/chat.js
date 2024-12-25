@@ -10,6 +10,12 @@ const backButton = document.getElementById("backButton");
 const fileInput = document.getElementById("fileInput");
 const fileUploadButton = document.getElementById("fileUploadButton");
 
+const backToMainButton = document.getElementById("backToMainButton");
+
+backToMainButton.addEventListener("click", () => {
+    window.location.href = "/";
+});
+
 function compressImage(file, maxWidth, maxHeight) {
     return new Promise((resolve) => {
         const img = document.createElement("img");
@@ -178,15 +184,7 @@ function initWebSocket() {
 
     socket.onclose = (event) => {
         console.log(`WebSocket closed. Code: ${event.code}, Reason: ${event.reason}`);
-
-        if (reconnectAttempts < maxReconnectAttempts) {
-            reconnectAttempts++;
-            console.log(`Reconnecting... Attempt ${reconnectAttempts}`);
-            setTimeout(initWebSocket, 1000); // 1초 후 재연결
-        } else {
-            console.error("Max reconnect attempts reached.");
-            resetUI();
-        }
+        resetUI();
     };
 
     socket.onerror = (error) => {

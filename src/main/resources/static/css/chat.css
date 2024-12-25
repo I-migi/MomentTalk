@@ -13,6 +13,7 @@ body, html {
 }
 
 .container {
+    position: relative; /* 자식 요소의 absolute 위치 기준 */
     width: 512px;
     max-width: 100%; /* Ensures the container fills the screen on mobile */
     height: 896px;
@@ -61,24 +62,40 @@ button:hover {
     box-shadow: 7px 7px 20px rgba(90, 103, 216, 0.4);
 }
 
-#backButton {
-    margin-top: 20px;
-    padding: 10px 20px;
-    background: linear-gradient(90deg, #ff7e5f, #feb47b);
-    color: #ffffff;
-    border: none;
-    border-radius: 15px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.3s ease, transform 0.2s ease;
-    box-shadow: 5px 5px 15px rgba(255, 126, 95, 0.3);
-}
+    .header {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 20px;
+        position: relative;
+    }
 
-#backButton:hover {
-    background: linear-gradient(90deg, #ff6a3d, #fd935d);
-    transform: translateY(-4px);
-    box-shadow: 7px 7px 20px rgba(255, 106, 61, 0.4);
-}
+    .back-button {
+        position: absolute; /* 부모 컨테이너를 기준으로 위치 */
+        top: 20px; /* 컨테이너의 상단에서 20px */
+        left: 20px; /* 컨테이너의 좌측에서 20px */
+        background: none;
+        border: none;
+        color: #4a4e69;
+        font-size: 1.5rem;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 10px;
+        transition: transform 0.2s ease;
+        z-index: 1000;
+    }
+
+    .back-button:hover {
+        transform: scale(1.1);
+    }
+
+    .title {
+        flex-grow: 1;
+        text-align: center;
+        font-size: 1.5rem;
+        color: #4a4e69;
+        font-weight: bold;
+    }
 
 #chatBox {
     display: none;
@@ -89,6 +106,24 @@ button:hover {
     width: 100%;
     box-sizing: border-box; /* Ensure padding doesn't overflow the width */
     overflow: hidden; /* Prevents unwanted scroll on small screens */
+}
+
+#backToMainButton {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: linear-gradient(90deg, #ff7e5f, #feb47b);
+    color: #ffffff;
+    border: none;
+    border-radius: 15px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+    box-shadow: 5px 5px 15px rgba(255, 126, 95, 0.3); }
+
+#backToMainButton:hover {
+    background: linear-gradient(90deg, #ff6a3d, #fd935d);
+    transform: translateY(-4px);
+    box-shadow: 7px 7px 20px rgba(255, 106, 61, 0.4);
 }
 
 #chatMessages {

@@ -18,7 +18,7 @@ public class ChatController {
 
     private final DeepLTranslationService deepLTranslationService;
 
-    @GetMapping("/instant-connect")
+    @GetMapping("/1-to-1-chat")
     public String chat() {
         return "chat";
     }
