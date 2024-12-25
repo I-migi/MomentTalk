@@ -63,6 +63,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     sendMessageSafely(session, "MATCH_SUCCESS:" + opponentUser);
                     WebSocketSession opponentSession = webSocketSessionManager.getSession(opponentUser);
                     sendMessageSafely(opponentSession, "MATCH_SUCCESS:" + sessionId);
+                    sendMessageSafely(opponentSession, "새로운 친구를 만났어요!");
+                    sendMessageSafely(session, "새로운 친구를 만났어요!");
                     log.info("Matched: {} with {}", sessionId, opponentUser);
                 } else {
                     sendMessageSafely(session, "WAITING_FOR_MATCH");
