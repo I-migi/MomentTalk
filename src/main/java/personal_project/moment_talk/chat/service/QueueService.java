@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
+import personal_project.moment_talk.common.webSocket.ChatWebSocketHandler;
+import personal_project.moment_talk.common.webSocket.WebSocketSessionManager;
 
 @Slf4j
 @Service
@@ -11,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 public class QueueService {
 
     private final RedisTemplate<String, String> redisTemplate;
+    private final WebSocketSessionManager webSocketSessionManager;
     private static final String QUEUE_KEY = "random_chat_queue";
 
     /*
@@ -68,13 +71,23 @@ public class QueueService {
     -> synchronized 무조건 필요!
      */
     public synchronized String getFromQueue() {
-        String sessionId = redisTemplate.opsForList().rightPop(QUEUE_KEY);
-        if (sessionId != null) {
+        while (true) {
+            String sessionId = redisTemplate.opsForList().rightPop(QUEUE_KEY);
+
+            if (sessionId == null) {
+                log.info("Queue is empty.");
+                return null;
+            }
+
+            // 유효성 검증: 닫힌 세션 제거
+            if (!webSocketSessionManager.isSessionValid(sessionId)) {
+                log.info("Invalid or closed session found in queue: {}", sessionId);
+                continue; // 다음 값으로 넘어감
+            }
+
             log.info("Popped from queue: {}", sessionId);
-        } else {
-            log.info("Queue is empty.");
+            return sessionId;
         }
-        return sessionId;
     }
 
     /*
@@ -92,7 +105,6 @@ public class QueueService {
         redisTemplate.opsForList().remove(QUEUE_KEY, 1, sessionId);
         log.info("Removed from queue: {}", sessionId);
     }
-
 
 
 }

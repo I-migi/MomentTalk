@@ -3,9 +3,13 @@ package personal_project.moment_talk.chat.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.WebSocketSession;
+import personal_project.moment_talk.common.webSocket.ChatWebSocketHandler;
+import personal_project.moment_talk.common.webSocket.WebSocketSessionManager;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -15,7 +19,7 @@ public class ChatService {
     private final QueueService queueService;
     // activeMatches -> Chat 중인 쌍
     private final Map<String, String> activeMatches = new HashMap<>();
-
+    private final WebSocketSessionManager webSocketSessionManager;
     /*
     attemptChatMatch -> 사용자 세션 ID 를 대기열에서 매칭할 상대방과 연결
     상대방을 찾을 수 없으면 대기열에 다시 사용자를 추가하고 null 반환
@@ -45,6 +49,12 @@ public class ChatService {
                 log.info("Queue is empty. Adding back to queue: {}", sessionId);
                 queueService.addToQueue(sessionId);
                 return null;
+            }
+
+            if (!webSocketSessionManager.isSessionValid(opponentSessionId)) {
+                log.info("Invalid or closed session found in queue: {}", opponentSessionId);
+                queueService.removeFromQueue(opponentSessionId);
+                continue;
             }
 
             if (!opponentSessionId.equals(sessionId) && !activeMatches.containsKey(opponentSessionId)) {

@@ -1,10 +1,16 @@
 package personal_project.moment_talk.common.webSocket;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+import org.springframework.web.socket.handler.WebSocketHandlerDecorator;
+import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
+import org.springframework.web.socket.server.standard.ServletServerContainerFactoryBean;
+import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
 /*
 EnableWebSocket -> WebSocket 을 활성화하기 위해 사용
@@ -40,6 +46,38 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(chatWebsocketHandler, "/ws/**").setAllowedOrigins("*");
+        registry.addHandler(chatWebsocketHandler, "/ws/**").setAllowedOrigins("*").setHandshakeHandler(new DefaultHandshakeHandler());
     }
+
+    /*
+    WebSocketHandler 를 커스터마이징 하기 위한 Decorator Factory
+    afterConnectionEstablished -> WebSocket 연결이 성공적으로 수립된 이후 실행
+    setBinaryMessageSizeLimit -> 바이너리 메시지(파일, 이미지, 영상)의 최대 크기 제한
+    setTextMessageSizeLimit -> 테스트 메시지(JSON, 문자열)의 최대 크기 제한
+     */
+    @Bean
+    public WebSocketHandlerDecoratorFactory webSocketHandlerDecoratorFactory() {
+        return (handler) -> new WebSocketHandlerDecorator(handler) {
+            @Override
+            public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+                session.setBinaryMessageSizeLimit(10 * 1024 * 1024); // 10MB
+                session.setTextMessageSizeLimit(10 * 1024 * 1024); // 10MB
+                super.afterConnectionEstablished(session);
+            }
+        };
+    }
+
+    /*
+    WebSocket 서버 컨테이너의 동작 구성
+    Spring 의 WebSocket 설정은 Tomcat 컨테이너 위에서 동작하기 때문에 해당 컨테이너 수준에서의 메시지 크기 제어
+     */
+    @Bean
+    public ServletServerContainerFactoryBean createWebSocketContainer() {
+        ServletServerContainerFactoryBean container = new ServletServerContainerFactoryBean();
+        container.setMaxTextMessageBufferSize(200 * 1024);  // 200KB
+        container.setMaxBinaryMessageBufferSize( 10 * 1024 * 1024);
+        return container;
+    }
+
+
 }
