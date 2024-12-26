@@ -227,23 +227,23 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
      */
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        String sessionId = session.getId();
-        webSocketSessionManager.removeSession(sessionId);
-        queueService.removeFromQueue(sessionId);
+        String httpSessionId = session.getAttributes().get("HTTP_SESSION_ID").toString();
+        webSocketSessionManager.removeSession(httpSessionId);
+        queueService.removeFromQueue(httpSessionId);
 
-        String opponentUser = chatService.getOpponentHttpSessionId(sessionId);
-        chatService.removeMatch(sessionId);
+        String opponentHttpSessionId = chatService.getOpponentHttpSessionId(httpSessionId);
+        chatService.removeMatch(opponentHttpSessionId);
 
-        if (opponentUser != null) {
-            WebSocketSession opponentSession = webSocketSessionManager.getSession(opponentUser);
+        if (opponentHttpSessionId != null) {
+            WebSocketSession opponentSession = webSocketSessionManager.getSession(opponentHttpSessionId);
 //            sendMessageSafely(opponentSession, "상대방이 채팅에서 떠났습니다..");
             opponentSession.sendMessage(new TextMessage("상대방이 채팅에서 떠났습니다.."));
-            log.info("Notified opponent about disconnection: {}", opponentUser);
+            log.info("Notified opponent about disconnection: {}", opponentHttpSessionId);
 
             // 상대방을 대기열에 다시 추가
-            queueService.addToQueue(opponentUser);
+            queueService.addToQueue(opponentHttpSessionId);
         }
-        log.info("Session closed: {}", sessionId);
+        log.info("Session closed: {}", httpSessionId);
     }
 
 
