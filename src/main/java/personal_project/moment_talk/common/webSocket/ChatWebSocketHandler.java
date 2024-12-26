@@ -1,5 +1,6 @@
 package personal_project.moment_talk.common.webSocket;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vane.badwordfiltering.BadWordFiltering;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +55,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
      */
     @Override
     public void afterConnectionEstablished(WebSocketSession webSocketSession) throws Exception {
-        String  httpSessionId = (String) webSocketSession.getAttributes().get("HTTP_SESSION_ID");
+        String httpSessionId = (String) webSocketSession.getAttributes().get("HTTP_SESSION_ID");
         webSocketSessionManager.addSession(httpSessionId, webSocketSession);
         queueService.addToQueue(httpSessionId);
         log.info("New connection: {}", httpSessionId);
@@ -62,6 +63,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         // 타임아웃 스케줄링
         scheduleTimeout(webSocketSession, httpSessionId);
 
+        tryChatMatch(webSocketSession, httpSessionId);
+    }
+
+    private void tryChatMatch(WebSocketSession webSocketSession, String httpSessionId) {
         Executors.newSingleThreadScheduledExecutor().schedule(() -> {
             try {
                 String opponentHttpSessionId = chatService.attemptChatMatch(httpSessionId);
@@ -83,7 +88,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             }
         }, 1, TimeUnit.SECONDS);
     }
-
 
 
     /*
@@ -125,33 +129,27 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     WebSocket 세션에 메시지를 안전하게 전송하는 역할
     1. WebSocketSession 이 null 이 아니고, open 되어 있으면 -> session 에 WebSocket 프로토콜을 통해 문자열 메시지 전송
      */
-    private synchronized void sendMessageSafely(WebSocketSession webSocketSession, String message, String userName) {
-        try {
+    private synchronized void sendMessageSafely(WebSocketSession webSocketSession, String message, String userName) throws IOException {
+
             if (webSocketSession != null && webSocketSession.isOpen()) {
                 Map<String, Object> finalMessage = new HashMap<>();
                 finalMessage.put("userName", userName);
                 finalMessage.put("timestamp", Instant.now().toString());
 
-                try {
-                    // message를 JSON으로 파싱
-                    Map<String, Object> messageMap = objectMapper.readValue(message, Map.class);
-                    String type = (String) messageMap.get("type");
+                // message 를 JSON 으로 파싱
+                Map<String, Object> messageMap = objectMapper.readValue(message, Map.class);
+                String type = (String) messageMap.get("type");
 
-                    if ("file".equals(type)) {
-                        // 파일 메시지 구조
-                        finalMessage.put("type", "file");
-                        finalMessage.put("fileName", messageMap.get("fileName"));
-                        finalMessage.put("fileType", messageMap.get("fileType"));
-                        finalMessage.put("size", messageMap.get("size"));
-                    } else {
-                        // 텍스트 메시지 구조
-                        finalMessage.put("type", "text");
-                        finalMessage.put("content", messageMap.get("content"));
-                    }
-                } catch (Exception e) {
-                    // message가 단순 텍스트인 경우 처리
+                if ("file".equals(type)) {
+                    // 파일 메시지 구조
+                    finalMessage.put("type", "file");
+                    finalMessage.put("fileName", messageMap.get("fileName"));
+                    finalMessage.put("fileType", messageMap.get("fileType"));
+                    finalMessage.put("size", messageMap.get("size"));
+                } else {
+                    // 텍스트 메시지 구조
                     finalMessage.put("type", "text");
-                    finalMessage.put("content", message);
+                    finalMessage.put("content", messageMap.get("content"));
                 }
 
                 // JSON 직렬화 후 전송
@@ -159,14 +157,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 log.info("Sending JSON message: {}", jsonMessage);
                 webSocketSession.sendMessage(new TextMessage(jsonMessage));
             } else {
-                log.info("Failed to send message. Session is closed or null: " +
-                        (webSocketSession != null ? webSocketSession.getId() : "null"));
+                log.info("Failed to send message. Session is closed or null: " + (webSocketSession != null ? webSocketSession.getId() : "null"));
             }
-        } catch (Exception e) {
-            System.out.println("Error while sending message to session: " +
-                    (webSocketSession != null ? webSocketSession.getId() : "null"));
-            e.printStackTrace();
-        }
     }
 
 
@@ -184,6 +176,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         String opponentHttpSessionId = chatService.getOpponentHttpSessionId(httpSessionId);
         WebSocketSession opponentWebSocketSession = webSocketSessionManager.getSession(opponentHttpSessionId);
         String userName = userRepository.findBySessionId(httpSessionId).get().getUserName();
+
         if (opponentHttpSessionId != null && opponentWebSocketSession.isOpen()) {
             if (message instanceof TextMessage) {
                 handleTextMessage(webSocketSession, message, opponentWebSocketSession, userName);
@@ -196,10 +189,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     }
 
     private void opponentSessionClosed(WebSocketSession webSocketSession, String httpSessionId) throws IOException {
-        log.info("Opponent session is closed. Removing match.");
+
         chatService.removeMatch(httpSessionId);
         queueService.addToQueue(httpSessionId);
-//        sendMessageSafely(webSocketSession, "Opponent disconnected. Waiting for a new match...");
         webSocketSession.sendMessage(new TextMessage("Opponent disconnected. Waiting for a new match..."));
     }
 
@@ -217,7 +209,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             String payload = message.getPayload().toString();
             sendMessageSafely(opponentSession, payload, userName);
         } else {
-            sendMessageSafely(opponentSession, "*****", userName);
+            opponentSession.sendMessage(new TextMessage("*******"));
 
         }
     }
@@ -236,7 +228,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
         if (opponentHttpSessionId != null) {
             WebSocketSession opponentSession = webSocketSessionManager.getSession(opponentHttpSessionId);
-//            sendMessageSafely(opponentSession, "상대방이 채팅에서 떠났습니다..");
             opponentSession.sendMessage(new TextMessage("상대방이 채팅에서 떠났습니다.."));
             log.info("Notified opponent about disconnection: {}", opponentHttpSessionId);
 

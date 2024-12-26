@@ -40,18 +40,14 @@ public class ChatService {
 
         String opponentHttpSessionId;
         while (true) {
+            // 대기열에서 httpSessionId pop()
             opponentHttpSessionId = queueService.getFromQueue();
 
+            // 대기열에 사람이 없으면 대기열에 해당 유저의 httpSessionId 추가 후 대기
             if (opponentHttpSessionId == null) {
                 log.info("Queue is empty. Adding back to queue: {}", httpSessionId);
                 queueService.addToQueue(httpSessionId);
                 return null;
-            }
-
-            if (!webSocketSessionManager.isSessionValid(opponentHttpSessionId)) {
-                log.info("Invalid or closed session found in queue: {}", opponentHttpSessionId);
-                queueService.removeFromQueue(opponentHttpSessionId);
-                continue;
             }
 
             if (!opponentHttpSessionId.equals(httpSessionId) && !activeMatches.containsKey(opponentHttpSessionId)) {
