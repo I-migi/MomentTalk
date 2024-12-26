@@ -11,6 +11,7 @@ import org.springframework.web.socket.handler.WebSocketHandlerDecorator;
 import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
 import org.springframework.web.socket.server.standard.ServletServerContainerFactoryBean;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
+import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 
 /*
 EnableWebSocket -> WebSocket 을 활성화하기 위해 사용
@@ -46,7 +47,9 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(chatWebsocketHandler, "/ws/**").setAllowedOrigins("*").setHandshakeHandler(new DefaultHandshakeHandler());
+        registry.addHandler(chatWebsocketHandler, "/ws/**").setAllowedOrigins("*")
+                .setHandshakeHandler(new DefaultHandshakeHandler())
+                .addInterceptors(new HttpSessionHandshakeInterceptor());
     }
 
     /*

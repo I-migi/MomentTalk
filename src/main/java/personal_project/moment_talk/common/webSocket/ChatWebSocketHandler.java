@@ -1,5 +1,6 @@
 package personal_project.moment_talk.common.webSocket;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vane.badwordfiltering.BadWordFiltering;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,8 +9,12 @@ import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import personal_project.moment_talk.chat.service.ChatService;
 import personal_project.moment_talk.chat.service.QueueService;
+import personal_project.moment_talk.user.repository.UserRepository;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -25,8 +30,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private final QueueService queueService;
     private final ChatService chatService;
     private final WebSocketSessionManager webSocketSessionManager;
-
     private final BadWordFiltering badWordFiltering;
+    private final UserRepository userRepository;
+    private final ObjectMapper objectMapper;
 
     /*
     클라이언트가 WebSocket 연결을 성공적으로 수립했을 때 호출 -> 사용자를 대기열에 추가하고, 채팅 매칭 시도
@@ -47,28 +53,30 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     다음에 B사용자가 매칭찾기를 눌렀을 때 대기열에 A사용자가 남아있으니깐 둘이 매칭
      */
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        String sessionId = session.getId();
-        webSocketSessionManager.addSession(sessionId, session);
-        queueService.addToQueue(sessionId);
-        log.info("New connection: {}", sessionId);
+    public void afterConnectionEstablished(WebSocketSession webSocketSession) throws Exception {
+        String  httpSessionId = (String) webSocketSession.getAttributes().get("HTTP_SESSION_ID");
+        webSocketSessionManager.addSession(httpSessionId, webSocketSession);
+        queueService.addToQueue(httpSessionId);
+        log.info("New connection: {}", httpSessionId);
 
         // 타임아웃 스케줄링
-        scheduleTimeout(session, sessionId);
+        scheduleTimeout(webSocketSession, httpSessionId);
 
         Executors.newSingleThreadScheduledExecutor().schedule(() -> {
             try {
-                String opponentUser = chatService.attemptChatMatch(sessionId);
-                if (opponentUser != null) {
-                    sendMessageSafely(session, "MATCH_SUCCESS:" + opponentUser);
-                    WebSocketSession opponentSession = webSocketSessionManager.getSession(opponentUser);
-                    sendMessageSafely(opponentSession, "MATCH_SUCCESS:" + sessionId);
-                    sendMessageSafely(opponentSession, "새로운 친구를 만났어요!");
-                    sendMessageSafely(session, "새로운 친구를 만났어요!");
-                    log.info("Matched: {} with {}", sessionId, opponentUser);
+                String opponentHttpSessionId = chatService.attemptChatMatch(httpSessionId);
+                if (opponentHttpSessionId != null) {
+                    String userName = userRepository.findBySessionId(httpSessionId).get().getUserName();
+                    String opponentName = userRepository.findBySessionId(opponentHttpSessionId).get().getUserName();
+                    webSocketSession.sendMessage(new TextMessage("MATCH_SUCCESS:" + opponentHttpSessionId));
+                    WebSocketSession opponentWebSocketSession = webSocketSessionManager.getSession(opponentHttpSessionId);
+                    opponentWebSocketSession.sendMessage(new TextMessage("MATCH_SUCCESS:" + httpSessionId));
+                    opponentWebSocketSession.sendMessage(new TextMessage(userName + "님이 채팅에 참가했습니다!"));
+                    webSocketSession.sendMessage(new TextMessage(opponentName + "님이 채팅에 참가했습니다!"));
+                    log.info("Matched: {} with {}", httpSessionId, opponentHttpSessionId);
                 } else {
-                    sendMessageSafely(session, "WAITING_FOR_MATCH");
-                    log.info("Still waiting for a match: {}", sessionId);
+                    webSocketSession.sendMessage(new TextMessage("WAITING_FOR_MATCH"));
+                    log.info("Still waiting for a match: {}", httpSessionId);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -95,17 +103,17 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     .schedule(() -> 작업 }, 30, TimeUnit.SECONDS) -> 일정 시간이 지난 후 작업 실행
 
      */
-    private void scheduleTimeout(WebSocketSession session, String sessionId) {
+    private void scheduleTimeout(WebSocketSession webSocketSession, String httpSessionId) {
         Executors.newSingleThreadScheduledExecutor().schedule(() -> {
             try {
-                if (!session.isOpen() || chatService.getOpponentUser(sessionId) != null) {
+                if (!webSocketSession.isOpen() || chatService.getOpponentHttpSessionId(httpSessionId) != null) {
                     return;
                 }
-                if (queueService.isInQueue(sessionId)) {
-                    queueService.removeFromQueue(sessionId); // 대기열에서 제거
-                    session.sendMessage(new TextMessage("NO_MATCH_FOUND"));
-                    session.close();
-                    log.info("No match found for session: {}", sessionId);
+                if (queueService.isInQueue(httpSessionId)) {
+                    queueService.removeFromQueue(httpSessionId); // 대기열에서 제거
+                    webSocketSession.sendMessage(new TextMessage("NO_MATCH_FOUND"));
+                    webSocketSession.close();
+                    log.info("No match found for session: {}", httpSessionId);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -117,16 +125,46 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     WebSocket 세션에 메시지를 안전하게 전송하는 역할
     1. WebSocketSession 이 null 이 아니고, open 되어 있으면 -> session 에 WebSocket 프로토콜을 통해 문자열 메시지 전송
      */
-    private synchronized void sendMessageSafely(WebSocketSession session, String message) {
+    private synchronized void sendMessageSafely(WebSocketSession webSocketSession, String message, String userName) {
         try {
-            if (session != null && session.isOpen()) {
-                log.info("Sending message to session: {} Message: {}", session.getId(), message);
-                session.sendMessage(new TextMessage(message));
+            if (webSocketSession != null && webSocketSession.isOpen()) {
+                Map<String, Object> finalMessage = new HashMap<>();
+                finalMessage.put("userName", userName);
+                finalMessage.put("timestamp", Instant.now().toString());
+
+                try {
+                    // message를 JSON으로 파싱
+                    Map<String, Object> messageMap = objectMapper.readValue(message, Map.class);
+                    String type = (String) messageMap.get("type");
+
+                    if ("file".equals(type)) {
+                        // 파일 메시지 구조
+                        finalMessage.put("type", "file");
+                        finalMessage.put("fileName", messageMap.get("fileName"));
+                        finalMessage.put("fileType", messageMap.get("fileType"));
+                        finalMessage.put("size", messageMap.get("size"));
+                    } else {
+                        // 텍스트 메시지 구조
+                        finalMessage.put("type", "text");
+                        finalMessage.put("content", messageMap.get("content"));
+                    }
+                } catch (Exception e) {
+                    // message가 단순 텍스트인 경우 처리
+                    finalMessage.put("type", "text");
+                    finalMessage.put("content", message);
+                }
+
+                // JSON 직렬화 후 전송
+                String jsonMessage = objectMapper.writeValueAsString(finalMessage);
+                log.info("Sending JSON message: {}", jsonMessage);
+                webSocketSession.sendMessage(new TextMessage(jsonMessage));
             } else {
-                log.info("Failed to send message. Session is closed or null: " + (session != null ? session.getId() : "null"));
+                log.info("Failed to send message. Session is closed or null: " +
+                        (webSocketSession != null ? webSocketSession.getId() : "null"));
             }
         } catch (Exception e) {
-            System.out.println("Error while sending message to session: " + (session != null ? session.getId() : "null"));
+            System.out.println("Error while sending message to session: " +
+                    (webSocketSession != null ? webSocketSession.getId() : "null"));
             e.printStackTrace();
         }
     }
@@ -141,27 +179,28 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     4. 대기열에 추가 -> 이거 없어도 될 것 같은데
      */
     @Override
-    public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
-        String sessionId = session.getId();
-        String opponentUser = chatService.getOpponentUser(sessionId);
-        WebSocketSession opponentSession = webSocketSessionManager.getSession(opponentUser);
-
-        if (opponentUser != null && opponentSession.isOpen()) {
+    public void handleMessage(WebSocketSession webSocketSession, WebSocketMessage<?> message) throws Exception {
+        String httpSessionId = (String) webSocketSession.getAttributes().get("HTTP_SESSION_ID");
+        String opponentHttpSessionId = chatService.getOpponentHttpSessionId(httpSessionId);
+        WebSocketSession opponentWebSocketSession = webSocketSessionManager.getSession(opponentHttpSessionId);
+        String userName = userRepository.findBySessionId(httpSessionId).get().getUserName();
+        if (opponentHttpSessionId != null && opponentWebSocketSession.isOpen()) {
             if (message instanceof TextMessage) {
-                handleTextMessage(session, message, opponentSession);
+                handleTextMessage(webSocketSession, message, opponentWebSocketSession, userName);
             } else if (message instanceof BinaryMessage) {
-                handleBinaryMessage(session, (BinaryMessage) message, opponentSession);
+                handleBinaryMessage(webSocketSession, (BinaryMessage) message, opponentWebSocketSession);
             }
         } else {
-            opponentSessionClosed(session, sessionId);
+            opponentSessionClosed(webSocketSession, httpSessionId);
         }
     }
 
-    private void opponentSessionClosed(WebSocketSession session, String sessionId) {
+    private void opponentSessionClosed(WebSocketSession webSocketSession, String httpSessionId) throws IOException {
         log.info("Opponent session is closed. Removing match.");
-        chatService.removeMatch(sessionId);
-        queueService.addToQueue(sessionId);
-        sendMessageSafely(session, "Opponent disconnected. Waiting for a new match...");
+        chatService.removeMatch(httpSessionId);
+        queueService.addToQueue(httpSessionId);
+//        sendMessageSafely(webSocketSession, "Opponent disconnected. Waiting for a new match...");
+        webSocketSession.sendMessage(new TextMessage("Opponent disconnected. Waiting for a new match..."));
     }
 
     private static void handleBinaryMessage(WebSocketSession session, BinaryMessage message, WebSocketSession opponentSession) throws IOException {
@@ -173,11 +212,13 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    private void handleTextMessage(WebSocketSession session, WebSocketMessage<?> message, WebSocketSession opponentSession) {
+    private void handleTextMessage(WebSocketSession session, WebSocketMessage<?> message, WebSocketSession opponentSession, String userName) throws IOException {
         if (!badWordFiltering.check(message.getPayload().toString())) {
-            sendMessageSafely(opponentSession, message.getPayload().toString());
+            String payload = message.getPayload().toString();
+            sendMessageSafely(opponentSession, payload, userName);
         } else {
-            sendMessageSafely(opponentSession, "*****");
+            sendMessageSafely(opponentSession, "*****", userName);
+
         }
     }
 
@@ -190,12 +231,13 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         webSocketSessionManager.removeSession(sessionId);
         queueService.removeFromQueue(sessionId);
 
-        String opponentUser = chatService.getOpponentUser(sessionId);
+        String opponentUser = chatService.getOpponentHttpSessionId(sessionId);
         chatService.removeMatch(sessionId);
 
         if (opponentUser != null) {
             WebSocketSession opponentSession = webSocketSessionManager.getSession(opponentUser);
-            sendMessageSafely(opponentSession, "상대방이 채팅에서 떠났습니다..");
+//            sendMessageSafely(opponentSession, "상대방이 채팅에서 떠났습니다..");
+            opponentSession.sendMessage(new TextMessage("상대방이 채팅에서 떠났습니다.."));
             log.info("Notified opponent about disconnection: {}", opponentUser);
 
             // 상대방을 대기열에 다시 추가

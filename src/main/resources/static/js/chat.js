@@ -100,28 +100,34 @@ backButton.addEventListener("click", () => {
 
 
 let socket = null;
-function displayMessage(message, messageType) {
+
+function displayMessage(message, messageType, userName = "You") {
     const messageDiv = document.createElement("div");
-    messageDiv.className = messageType === "sent" ? "message-sent" : "message-received";
+    messageDiv.className = messageType === "sent" ? "message-sent-wrapper" : "message-received-wrapper";
 
     const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    if (messageType === "received") {
-        // 수신 메시지에는 번역 버튼 추가
-        messageDiv.innerHTML = `
-            <span>${message}</span>
-            <button class="translate-button" data-message="${message}">번역</button>
-            <span class="message-time">${timeString}</span>`;
-    } else {
-        // 전송 메시지에는 번역 버튼 없음
-        messageDiv.innerHTML = `
-            <span>${message}</span>
-            <span class="message-time">${timeString}</span>`;
+    // HTML 구조 생성
+    messageDiv.innerHTML = `
+        <div class="message-container">
+            <div class="message-header">
+                <span class="message-username">${userName}</span>
+                <span class="message-time">${timeString}</span>
+            </div>
+            <div class="message-content">${message}</div>
+            ${
+        messageType === "received"
+            ? `<button class="translate-button" data-message="${message}">번역</button>`
+            : ""
     }
+        </div>
+    `;
 
     chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    chatMessages.scrollTop = chatMessages.scrollHeight; // 스크롤을 항상 맨 아래로 유지
 }
+
+
 
 // Initialize WebSocket
 function initWebSocket() {
@@ -143,7 +149,9 @@ function initWebSocket() {
                         console.log(`Receiving file metadata: ${parsedData.fileName}, ${parsedData.fileType}`);
                         currentFileMetadata = parsedData; // 메타데이터 저장
                     } else if (parsedData.type === "text") {
-                        displayMessage(parsedData.content, "received"); // 수신 메시지 표시
+                        const userName = parsedData.userName || "Unknown"; // 서버에서 전달된 userName
+                        const content = parsedData.content; // 메시지 내용
+                        displayMessage(content, "received", userName); // userName과 content 전달
                     }
                 } else {
                     // 단순 텍스트 메시지 처리

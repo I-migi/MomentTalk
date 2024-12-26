@@ -3,13 +3,10 @@ package personal_project.moment_talk.chat.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.socket.WebSocketSession;
-import personal_project.moment_talk.common.webSocket.ChatWebSocketHandler;
 import personal_project.moment_talk.common.webSocket.WebSocketSessionManager;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -38,56 +35,56 @@ public class ChatService {
     바로 Chat 을 시작할 수 있기 때문.
 
     */
-    public synchronized String attemptChatMatch(String sessionId) {
-        log.info("Trying to match for session: {}", sessionId);
+    public synchronized String attemptChatMatch(String httpSessionId) {
+        log.info("Trying to match for session: {}", httpSessionId);
 
-        String opponentSessionId;
+        String opponentHttpSessionId;
         while (true) {
-            opponentSessionId = queueService.getFromQueue();
+            opponentHttpSessionId = queueService.getFromQueue();
 
-            if (opponentSessionId == null) {
-                log.info("Queue is empty. Adding back to queue: {}", sessionId);
-                queueService.addToQueue(sessionId);
+            if (opponentHttpSessionId == null) {
+                log.info("Queue is empty. Adding back to queue: {}", httpSessionId);
+                queueService.addToQueue(httpSessionId);
                 return null;
             }
 
-            if (!webSocketSessionManager.isSessionValid(opponentSessionId)) {
-                log.info("Invalid or closed session found in queue: {}", opponentSessionId);
-                queueService.removeFromQueue(opponentSessionId);
+            if (!webSocketSessionManager.isSessionValid(opponentHttpSessionId)) {
+                log.info("Invalid or closed session found in queue: {}", opponentHttpSessionId);
+                queueService.removeFromQueue(opponentHttpSessionId);
                 continue;
             }
 
-            if (!opponentSessionId.equals(sessionId) && !activeMatches.containsKey(opponentSessionId)) {
+            if (!opponentHttpSessionId.equals(httpSessionId) && !activeMatches.containsKey(opponentHttpSessionId)) {
                 break;
             }
-            log.info("Skipping invalid opponent: {}", opponentSessionId);
+            log.info("Skipping invalid opponent: {}", opponentHttpSessionId);
         }
 
         // 매칭 성공
-        activeMatches.put(sessionId, opponentSessionId);
-        activeMatches.put(opponentSessionId, sessionId);
-        log.info("Matched: {} with {}", sessionId, opponentSessionId);
+        activeMatches.put(httpSessionId, opponentHttpSessionId);
+        activeMatches.put(opponentHttpSessionId, httpSessionId);
+        log.info("Matched: {} with {}", httpSessionId, opponentHttpSessionId);
 
-        return opponentSessionId;
+        return opponentHttpSessionId;
     }
 
 
     /*
     activeMatches 에서 사용자의 sessionId 를 이용해 상대방의 sessionId GET
      */
-    public String getOpponentUser(String sessionId) {
-        return activeMatches.get(sessionId);
+    public String getOpponentHttpSessionId(String httpSessionId) {
+        return activeMatches.get(httpSessionId);
     }
 
     /*
     1. activeMatches 에서 특정 사용자의 세션 ID 를 제거하고, 상대방 세션 ID GET
     2. 상대방 세션 ID 가 null 이 아니면 상대방 세션 ID 도 똑같이 제거
      */
-    public void removeMatch(String sessionId) {
-        String opponentUser = activeMatches.remove(sessionId);
-        if (opponentUser != null) {
-            activeMatches.remove(opponentUser);
+    public void removeMatch(String httpSessionId) {
+        String opponentHttpSessionId = activeMatches.remove(httpSessionId);
+        if (opponentHttpSessionId != null) {
+            activeMatches.remove(opponentHttpSessionId);
         }
-        log.info("Removed match for session: {} and opponent: {}", sessionId, opponentUser);
+        log.info("Removed match for session: {} and opponent: {}", httpSessionId, opponentHttpSessionId);
     }
 }

@@ -30,6 +30,72 @@ body, html {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     box-sizing: border-box; /* Prevents padding overflow */
 }
+    /* 메시지 헤더 (사용자 이름 + 시간) */
+    .message-header {
+        display: flex;
+        justify-content: space-between; /* 사용자 이름 왼쪽, 시간 오른쪽 */
+        align-items: center;
+        font-size: 0.85rem; /* 작은 텍스트 크기 */
+        color: #bbb; /* 희미한 색상 */
+        margin-bottom: 5px; /* 메시지 본문과 간격 */
+    }
+
+    /* 사용자 이름 스타일 */
+    .message-username {
+        color: #ff7e5f; /* 사용자 이름 색상 */
+        font-weight: bold; /* 굵게 표시 */
+    }
+
+    /* 시간 스타일 */
+    .message-time {
+        font-size: 0.8rem; /* 작은 크기 */
+        color: #bbb; /* 희미한 색상 */
+        margin-left: auto; /* 오른쪽으로 정렬 */
+    }
+    /* 메시지 본문 */
+    .message-content {
+        background-color: #4a5568; /* 수신 메시지 배경색 */
+        color: #ffffff; /* 메시지 텍스트 색상 */
+        padding: 10px 15px; /* 메시지 내부 여백 */
+        border-radius: 10px; /* 메시지 박스 둥근 모서리 */
+        font-size: 1rem; /* 기본 텍스트 크기 */
+        line-height: 1.5; /* 줄 간격 */
+        word-wrap: break-word; /* 긴 단어 줄바꿈 */
+        white-space: pre-wrap; /* 줄바꿈과 공백 유지 */
+    }
+
+    /* 전송된 메시지 본문 */
+    .message-sent-wrapper .message-content {
+        background-color: #667eea; /* 전송 메시지 배경색 */
+        align-self: flex-end; /* 오른쪽 정렬 */
+    }
+
+    /* 번역 버튼 기본 숨김 */
+    .translate-button {
+        display: none; /* 기본적으로 숨김 */
+        position: absolute; /* 버튼 위치를 메시지에 상대적으로 고정 */
+        right: 10px; /* 메시지 박스 오른쪽에서 10px 떨어지도록 설정 */
+        top: 50%; /* 메시지 박스 높이의 50%에 위치 */
+        transform: translateY(-50%); /* 세로 중앙 정렬 */
+        padding: 5px 10px;
+        font-size: 0.8rem;
+        background: #f1f1f1;
+        color: #333;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        cursor: pointer;
+        z-index: 1; /* 다른 요소 위에 표시 */
+    }
+
+    /* 메시지 박스에 마우스를 올리면 번역 버튼 보이기 */
+    .message-received-wrapper:hover .translate-button {
+        display: inline-block; /* 메시지 위에 마우스를 올리면 버튼 표시 */
+    }
+
+    /* 메시지 박스 스타일 수정 */
+    .message-container {
+        position: relative; /* 번역 버튼 위치를 메시지 박스 기준으로 설정 */
+    }
 
 .container:hover {
     transform: scale(1.02);
@@ -142,13 +208,27 @@ button:hover {
     box-sizing: border-box; /* Ensure padding doesn't overflow the width */
 }
 
-#chatMessages .message-time {
-    font-size: 0.8rem;
-    color: #bbb;
-    margin-left: 10px;
-    align-self: flex-end; /* 시간을 오른쪽에 정렬 */
-}
 
+    /* 메시지 전체 컨테이너 */
+    .message-sent-wrapper,
+    .message-received-wrapper {
+        display: flex;
+        flex-direction: column; /* 상하 레이아웃 */
+        align-items: flex-start; /* 수신 메시지는 왼쪽 정렬 */
+        margin-bottom: 15px; /* 메시지 간격 */
+        max-width: 70%; /* 메시지 너비 제한 */
+    }
+
+    /* 전송된 메시지는 오른쪽 정렬 */
+    .message-sent-wrapper {
+        align-self: flex-end; /* 오른쪽 정렬 */
+    }
+
+    /* 시간 스타일 */
+    .message-time {
+        color: #bbb; /* 희미한 색상 */
+        font-size: 0.8rem; /* 작은 크기 */
+    }
 
 #chatMessages .message-sent {
     background-color: #667eea;
@@ -179,22 +259,6 @@ button:hover {
     position: relative;
     display: flex; /* 버튼 정렬을 위한 플렉스 컨테이너 */
     align-items: center; /* 세로 중앙 정렬 */
-}
-
-#chatMessages .message-received:hover .translate-button {
-    display: inline-block; /* 마우스를 올릴 때만 보이도록 설정 */
-}
-
-.translate-button {
-    display: none; /* 기본적으로 숨김 */
-    margin-left: 10px;
-    padding: 5px 10px;
-    font-size: 0.8rem;
-    background: #f1f1f1;
-    color: #333;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    cursor: pointer;
 }
 
 #chatInput {
