@@ -100,8 +100,7 @@ public class DeepLTranslationService {
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         // HHTP 요청 본문(body) 와 헤더 결합하여 하나의 요청 엔티티 객체로 생성
-        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
-        return requestEntity;
+        return new HttpEntity<>(body, headers);
     }
 
     // 텍스트가 한글인지 영어인지 감지

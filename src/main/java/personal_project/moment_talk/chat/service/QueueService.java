@@ -10,10 +10,10 @@ import personal_project.moment_talk.common.webSocket.WebSocketSessionManager;
 @Service
 @RequiredArgsConstructor
 public class QueueService {
-
+    // 대기열 클래스 -> 레디스로 관리
     private final RedisTemplate<String, String> redisTemplate;
     private final WebSocketSessionManager webSocketSessionManager;
-    private static final String QUEUE_KEY = "random_chat_queue";
+    private static final String WAITING_QUEUE_KEY = "waiting_queue";
 
     /*
     addToQueue -> 주어진 sessionId 를 Redis 의 큐(리스트)에 추가
@@ -52,11 +52,13 @@ public class QueueService {
      */
     public synchronized void addToQueue(String httpSessionId) {
         if (!isInQueue(httpSessionId)) {
-            redisTemplate.opsForList().leftPush(QUEUE_KEY, httpSessionId);
+            redisTemplate.opsForList().leftPush(WAITING_QUEUE_KEY, httpSessionId);
             log.info("Session added to queue: {}", httpSessionId);
-        } else {
-            log.info("Session already in queue: {}", httpSessionId);
+            return;
         }
+
+        log.info("Session already in queue: {}", httpSessionId);
+
     }
 
     /*
@@ -71,7 +73,7 @@ public class QueueService {
      */
     public synchronized String getFromQueue() {
         while (true) {
-            String httpSessionId = redisTemplate.opsForList().rightPop(QUEUE_KEY);
+            String httpSessionId = redisTemplate.opsForList().rightPop(WAITING_QUEUE_KEY);
 
             if (httpSessionId == null) {
                 log.info("Queue is empty.");
@@ -81,6 +83,7 @@ public class QueueService {
             // 유효성 검증: 닫힌 세션 제거
             if (!webSocketSessionManager.isSessionValid(httpSessionId)) {
                 log.info("Invalid or closed session found in queue: {}", httpSessionId);
+                removeFromQueue(httpSessionId);
                 continue; // 다음 값으로 넘어감
             }
 
@@ -94,15 +97,15 @@ public class QueueService {
     Redis 큐(리스트)에서 0번 인덱스부터 -1번 인덱스까지의 모든 값을 GET
      */
     public boolean isInQueue(String httpSessionId) {
-        return redisTemplate.opsForList().range(QUEUE_KEY, 0, -1).contains(httpSessionId);
+        return redisTemplate.opsForList().range(WAITING_QUEUE_KEY, 0, -1).contains(httpSessionId);
     }
 
     /*
     Redis 리스트에서 특정 sessionId 제거
      */
-    public void removeFromQueue(String sessionId) {
-        redisTemplate.opsForList().remove(QUEUE_KEY, 1, sessionId);
-        log.info("Removed from queue: {}", sessionId);
+    public void removeFromQueue(String httpSessionId) {
+        redisTemplate.opsForList().remove(WAITING_QUEUE_KEY, 1, httpSessionId);
+        log.info("Removed from queue: {}", httpSessionId);
     }
 
 
