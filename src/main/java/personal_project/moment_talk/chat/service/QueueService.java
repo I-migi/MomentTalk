@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
-import personal_project.moment_talk.common.webSocket.ChatWebSocketHandler;
 import personal_project.moment_talk.common.webSocket.WebSocketSessionManager;
 
 @Slf4j
@@ -51,12 +50,12 @@ public class QueueService {
 
 
      */
-    public synchronized void addToQueue(String sessionId) {
-        if (!isInQueue(sessionId)) {
-            redisTemplate.opsForList().leftPush(QUEUE_KEY, sessionId);
-            log.info("Session added to queue: {}", sessionId);
+    public synchronized void addToQueue(String httpSessionId) {
+        if (!isInQueue(httpSessionId)) {
+            redisTemplate.opsForList().leftPush(QUEUE_KEY, httpSessionId);
+            log.info("Session added to queue: {}", httpSessionId);
         } else {
-            log.info("Session already in queue: {}", sessionId);
+            log.info("Session already in queue: {}", httpSessionId);
         }
     }
 
@@ -72,21 +71,21 @@ public class QueueService {
      */
     public synchronized String getFromQueue() {
         while (true) {
-            String sessionId = redisTemplate.opsForList().rightPop(QUEUE_KEY);
+            String httpSessionId = redisTemplate.opsForList().rightPop(QUEUE_KEY);
 
-            if (sessionId == null) {
+            if (httpSessionId == null) {
                 log.info("Queue is empty.");
                 return null;
             }
 
             // 유효성 검증: 닫힌 세션 제거
-            if (!webSocketSessionManager.isSessionValid(sessionId)) {
-                log.info("Invalid or closed session found in queue: {}", sessionId);
+            if (!webSocketSessionManager.isSessionValid(httpSessionId)) {
+                log.info("Invalid or closed session found in queue: {}", httpSessionId);
                 continue; // 다음 값으로 넘어감
             }
 
-            log.info("Popped from queue: {}", sessionId);
-            return sessionId;
+            log.info("Popped from queue: {}", httpSessionId);
+            return httpSessionId;
         }
     }
 
@@ -94,8 +93,8 @@ public class QueueService {
     파라미터의 sessionId 가 Redis 의 큐에 존재하는지 확인
     Redis 큐(리스트)에서 0번 인덱스부터 -1번 인덱스까지의 모든 값을 GET
      */
-    public boolean isInQueue(String sessionId) {
-        return redisTemplate.opsForList().range(QUEUE_KEY, 0, -1).contains(sessionId);
+    public boolean isInQueue(String httpSessionId) {
+        return redisTemplate.opsForList().range(QUEUE_KEY, 0, -1).contains(httpSessionId);
     }
 
     /*

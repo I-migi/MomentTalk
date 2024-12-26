@@ -20,10 +20,14 @@ public class UserController {
     2. sessionService 에서 checkSession 실행
      */
     @GetMapping("/")
-    public String mainPage(HttpSession session) {
+    public String mainPage(HttpSession httpSession) {
 
-        String sessionId = session.getId();
-        userSessionService.checkSession(sessionId);
+        if (httpSession.getAttribute("HTTP_SESSION_ID") == null) {
+            httpSession.setAttribute("HTTP_SESSION_ID", httpSession.getId());
+        }
+
+        String httpSessionId = httpSession.getId();
+        userSessionService.checkSession(httpSessionId);
 
         return "mainPage";
     }
