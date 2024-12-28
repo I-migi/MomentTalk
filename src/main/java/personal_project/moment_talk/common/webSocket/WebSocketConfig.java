@@ -44,10 +44,15 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
      */
     private final ChatWebSocketHandler chatWebsocketHandler;
+    private final GroupChatWebSocketHandler groupChatWebsocketHandler;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(chatWebsocketHandler, "/ws/**").setAllowedOrigins("*")
+                .setHandshakeHandler(new DefaultHandshakeHandler())
+                .addInterceptors(new HttpSessionHandshakeInterceptor());
+
+        registry.addHandler(groupChatWebsocketHandler, "/group-chat/**").setAllowedOrigins("*")
                 .setHandshakeHandler(new DefaultHandshakeHandler())
                 .addInterceptors(new HttpSessionHandshakeInterceptor());
     }
