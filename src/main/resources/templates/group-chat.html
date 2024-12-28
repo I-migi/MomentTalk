@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Chat</title>
+    <link rel="stylesheet" href="/css/group-chat.css" th:href="@{/css/group-chat.css}" />
+</head>
+<body>
+<div class="container">
+    <div class="header">Group Chat</div>
+
+    <div class="group-list" id="groupList">
+        <!-- Group list items will be dynamically injected here -->
+    </div>
+
+    <div class="create-group">
+        <input type="text" id="groupName" placeholder="Enter group name">
+        <button id="createGroup">Create Group</button>
+    </div>
+</div>
+<script src="/js/group-chat.js" th:src="@{/js/group-chat.js}"></script>
+</body>
+</html>
