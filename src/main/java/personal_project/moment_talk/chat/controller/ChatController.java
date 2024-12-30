@@ -36,7 +36,7 @@ public class ChatController {
 
     @ResponseBody
     @GetMapping("/group-chat/rooms")
-    public Map<Object, Object> groupChatRooms() {
+    public Map<String, Map<String, String>> groupChatRooms() {
         return groupChatParticipants.getAllGroupChatRooms();
     }
 

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +40,20 @@ public class GroupChatParticipants {
         return redisTemplate.opsForSet().members(PARTICIPANTS_KEY_PREFIX + roomId + ":participants");
     }
 
-    public Map<Object , Object> getAllGroupChatRooms() {
-        return redisTemplate.opsForHash().entries(ROOM_KEY);
+    public Map<String, Map<String, String>> getAllGroupChatRooms() {
+        Map<Object, Object> rooms = redisTemplate.opsForHash().entries(ROOM_KEY);
+        Map<String, Map<String, String>> returnRooms = new HashMap<>();
+
+        for (Map.Entry<Object, Object> entry : rooms.entrySet()) {
+            String roomName = (String) entry.getKey();
+            String roomId = (String) entry.getValue();
+
+            Map<String, String> roomInfo = new HashMap<>();
+            roomInfo.put("id", roomId);
+            roomInfo.put("name", roomName);
+
+            returnRooms.put(roomName, roomInfo);
+        }
+        return returnRooms;
     }
 }

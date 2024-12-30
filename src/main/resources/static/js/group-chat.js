@@ -5,18 +5,18 @@ function fetchGroupChatRooms() {
             const groupList = document.getElementById('groupList');
             groupList.innerHTML = ''; // Clear current group list
 
-            Object.entries(data).forEach(([key, value]) => {
+            Object.entries(data).forEach(([roomId, roomData]) => {
                 const groupItem = document.createElement('div');
                 groupItem.className = 'group-item';
 
                 const groupName = document.createElement('span');
-                groupName.textContent = value;
+                groupName.textContent = roomData.name; // Use the room name
 
                 const joinButton = document.createElement('button');
                 joinButton.textContent = 'Join';
                 joinButton.onclick = () => {
-                    alert(`Joining group: ${value}`);
-                    // Add your join group logic here
+                    alert(`Joining group: ${roomData.name}`);
+                    // Add your join group logic here (e.g., call another API)
                 };
 
                 groupItem.appendChild(groupName);
