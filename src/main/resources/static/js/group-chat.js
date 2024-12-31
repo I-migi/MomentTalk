@@ -3,20 +3,20 @@ function fetchGroupChatRooms() {
         .then(response => response.json())
         .then(data => {
             const groupList = document.getElementById('groupList');
-            groupList.innerHTML = ''; // Clear current group list
+            groupList.innerHTML = ''; // 현재 리스트 초기화
 
-            Object.entries(data).forEach(([roomId, roomData]) => {
+            data.forEach(room => {
                 const groupItem = document.createElement('div');
                 groupItem.className = 'group-item';
 
                 const groupName = document.createElement('span');
-                groupName.textContent = roomData.name; // Use the room name
+                groupName.textContent = room.name; // 방 이름 표시
 
                 const joinButton = document.createElement('button');
                 joinButton.textContent = 'Join';
                 joinButton.onclick = () => {
-                    alert(`Joining group: ${roomData.name}`);
-                    // Add your join group logic here (e.g., call another API)
+                    alert(`Joining group: ${room.name}`);
+                    // Join 그룹 로직 추가
                 };
 
                 groupItem.appendChild(groupName);

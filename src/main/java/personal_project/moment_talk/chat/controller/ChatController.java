@@ -13,6 +13,7 @@ import personal_project.moment_talk.chat.service.DeepLTranslationService;
 import personal_project.moment_talk.common.redis.GroupChatParticipants;
 import personal_project.moment_talk.common.webSocket.GroupChatWebSocketHandler;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -36,7 +37,7 @@ public class ChatController {
 
     @ResponseBody
     @GetMapping("/group-chat/rooms")
-    public Map<String, Map<String, String>> groupChatRooms() {
+    public List<Map<String, String>> groupChatRooms() {
         return groupChatParticipants.getAllGroupChatRooms();
     }
 

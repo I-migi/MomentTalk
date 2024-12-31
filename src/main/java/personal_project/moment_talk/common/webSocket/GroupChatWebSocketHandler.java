@@ -11,6 +11,9 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import personal_project.moment_talk.common.redis.GroupChatParticipants;
 import personal_project.moment_talk.user.repository.UserRepository;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -24,8 +27,9 @@ public class GroupChatWebSocketHandler extends TextWebSocketHandler {
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
 
-    public void handleCreateRoom(String roomId, String roomName) {
-        groupChatParticipants.createGroupChatRoom(roomId, roomName);
+    //TODO: 생성을 하고 해당 채팅방 페이지로 이동, 해당 그룹 채팅방의 웹소켓 배열에 사용자의 웹소켓 ID 추가 필요.
+    public void handleCreateRoom(String roomName, String httpSessionId) {
+        groupChatParticipants.createGroupChatRoom(roomName, httpSessionId);
     }
 
     private void brodCastMessage(String roomId, String message) {
@@ -43,11 +47,13 @@ public class GroupChatWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    //TODO: 해당 채팅방 페이지로 이동, 해당 그룹 채팅방에 해당하는 웹소켓 배열에 사용자의 웹소켓 ID 추가
     public void handleJoinRoom(String roomId, String httpSessionId) {
         groupChatParticipants.addParticipantToGroupChatRoom(roomId, httpSessionId);
         brodCastMessage(roomId, "User joined: " + httpSessionId);
     }
 
+    //TODO: 해당 채팅방 페이지에서 나오고, 그룹 Chat 페이지로 이동, 해당 웹소켓 배열에서 사용자의 웹소켓 ID 제거
     public void handleLeaveRoom(String roomId, String httpSessionId) {
         groupChatParticipants.removeParticipant(roomId, httpSessionId);
         brodCastMessage(roomId, "User left: " + httpSessionId);
