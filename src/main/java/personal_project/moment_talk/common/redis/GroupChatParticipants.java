@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -15,10 +15,23 @@ public class GroupChatParticipants {
     private final RedisTemplate<String , Object> redisTemplate;
     private static final String ROOM_KEY = "chat:rooms";
     private static final String PARTICIPANTS_KEY_PREFIX = "chat:room:";
+    private static final String PRIVATE_ROOM_ID = "chat:session_to_room";
 
-    public void createGroupChatRoom(String roomId, String roomName) {
-        redisTemplate.opsForHash().put(ROOM_KEY, roomId, roomName);
+    public void createGroupChatRoom(String roomName, String httpSessionId) {
+        String roomId = UUID.randomUUID().toString(); // 방 ID 생성
+        redisTemplate.opsForHash().put(ROOM_KEY, roomName, roomId); // Redis에 저장
+
+        // Debugging: roomId 저장 여부 확인
+        String savedRoomId = (String) redisTemplate.opsForHash().get(ROOM_KEY, roomName);
+        System.out.println("Saved Room ID: " + savedRoomId);
+
         redisTemplate.expire(PARTICIPANTS_KEY_PREFIX + roomId + ":participants", 1, TimeUnit.DAYS);
+
+        List<String> participants = new ArrayList<>();
+        participants.add(httpSessionId);
+//        chatParticipants.put(roomId, participants);
+
+        redisTemplate.opsForHash().put(PRIVATE_ROOM_ID, httpSessionId, roomId);
     }
 
     public void deleteGroupChatRoom(String roomId) {
@@ -28,18 +41,32 @@ public class GroupChatParticipants {
 
     public void removeParticipant(String roomId, String httpSessionId) {
         redisTemplate.opsForSet().remove(PARTICIPANTS_KEY_PREFIX + roomId + ":participants", httpSessionId);
-    }
 
+    }
 
     public void addParticipantToGroupChatRoom(String roomId, String httpSessionId) {
         redisTemplate.opsForSet().add(PARTICIPANTS_KEY_PREFIX + roomId + ":participants", httpSessionId);
+        redisTemplate.opsForHash().put(PRIVATE_ROOM_ID, httpSessionId, roomId);
     }
 
     public Set<Object> getParticipants(String roomId) {
         return redisTemplate.opsForSet().members(PARTICIPANTS_KEY_PREFIX + roomId + ":participants");
     }
 
-    public Map<Object , Object> getAllGroupChatRooms() {
-        return redisTemplate.opsForHash().entries(ROOM_KEY);
+    public  List<Map<String, String>> getAllGroupChatRooms() {
+        Map<Object, Object> rooms = redisTemplate.opsForHash().entries(ROOM_KEY);
+
+        List<Map<String, String>> result = new ArrayList<>();
+        for (Map.Entry<Object, Object> entry : rooms.entrySet()) {
+            String roomName = (String) entry.getKey();
+            String roomId = (String) entry.getValue();
+
+            Map<String, String> roomData = new HashMap<>();
+            roomData.put("id", roomId);
+            roomData.put("name", roomName);
+
+            result.add(roomData);
+        }
+        return result;
     }
 }

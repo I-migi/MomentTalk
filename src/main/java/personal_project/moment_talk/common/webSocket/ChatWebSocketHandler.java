@@ -10,12 +10,12 @@ import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import personal_project.moment_talk.chat.service.ChatService;
 import personal_project.moment_talk.chat.service.QueueService;
+import personal_project.moment_talk.common.redis.GroupChatParticipants;
 import personal_project.moment_talk.user.repository.UserRepository;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +34,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private final BadWordFiltering badWordFiltering;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
+    private final GroupChatParticipants groupChatParticipants;
 
     /*
     클라이언트가 WebSocket 연결을 성공적으로 수립했을 때 호출 -> 사용자를 대기열에 추가하고, 채팅 매칭 시도
@@ -55,6 +56,20 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
      */
     @Override
     public void afterConnectionEstablished(WebSocketSession webSocketSession) throws Exception {
+        String path = webSocketSession.getUri().getPath();
+        if (path.startsWith("/ws/connect")) {
+            handleOneToOneConnection(webSocketSession);
+        } else if (path.startsWith("/ws/group")) {
+            log.info(path);
+            String[] segments = path.split("/");
+            String roomId = segments[segments.length - 1];
+            String httpSessionId = (String) webSocketSession.getAttributes().get("HTTP_SESSION_ID");
+            webSocketSessionManager.addSession(httpSessionId, webSocketSession);
+            // 그룹채팅 설정
+        }
+    }
+
+    private void handleOneToOneConnection(WebSocketSession webSocketSession) {
         String httpSessionId = (String) webSocketSession.getAttributes().get("HTTP_SESSION_ID");
         webSocketSessionManager.addSession(httpSessionId, webSocketSession);
         queueService.addToQueue(httpSessionId);
@@ -172,6 +187,55 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
      */
     @Override
     public void handleMessage(WebSocketSession webSocketSession, WebSocketMessage<?> message) throws Exception {
+
+        String path = webSocketSession.getUri().getPath();
+        if (path.startsWith("/ws/connect")) {
+            handleOneToOneMessage(webSocketSession, message);
+        } else if (path.startsWith("/ws/group")) {
+            String[] segments = path.split("/");
+            String roomId = segments[segments.length - 1];
+            String httpSessionId = (String) webSocketSession.getAttributes().get("HTTP_SESSION_ID");
+
+            Set<Object> participantHttpSessionIds = groupChatParticipants.getParticipants(roomId);
+            //레디스에서 roomId를 이용해 모든 httpSessionId를 갖고오면 된다
+            participantHttpSessionIds.remove(httpSessionId);
+
+            List<WebSocketSession> participantWebSocketSessions = new ArrayList<>();
+            for (Object participantSessionId : participantHttpSessionIds) {
+                WebSocketSession participantSession = webSocketSessionManager.getSession((String) participantSessionId);
+                if (participantSession != null) {
+                    participantWebSocketSessions.add(participantSession);
+                }
+            }
+            String userName = userRepository.findBySessionId(httpSessionId).get().getUserName();
+
+            if (message instanceof TextMessage) {
+                if (!badWordFiltering.check(message.getPayload().toString())) {
+                    String payload = message.getPayload().toString();
+                    for (WebSocketSession opponentWebSocketSession : participantWebSocketSessions) {
+                        sendMessageSafely(opponentWebSocketSession, payload, userName);
+                    }
+                } else {
+                    for (WebSocketSession opponentWebSocketSession : participantWebSocketSessions) {
+                        opponentWebSocketSession.sendMessage(new TextMessage("*******"));
+                    }
+                }
+            } else if (message instanceof BinaryMessage) {
+                try {
+                    for (WebSocketSession opponentWebSocketSession : participantWebSocketSessions) {
+                        opponentWebSocketSession.sendMessage(message);
+                    }
+                } catch (Exception e) {
+                    log.error("Error processing binary message:", e);
+                    webSocketSession.close(CloseStatus.SERVER_ERROR);
+                }
+            }
+
+        }
+
+    }
+
+    private void handleOneToOneMessage(WebSocketSession webSocketSession, WebSocketMessage<?> message) throws IOException {
         String httpSessionId = (String) webSocketSession.getAttributes().get("HTTP_SESSION_ID");
         String opponentHttpSessionId = chatService.getOpponentHttpSessionId(httpSessionId);
         WebSocketSession opponentWebSocketSession = webSocketSessionManager.getSession(opponentHttpSessionId);
