@@ -31,12 +31,7 @@ public class UserController {
 
         return "mainPage";
     }
-
-    @GetMapping("/select-category")
-    public String selectCategory() {
-        return "selectCategory";
-    }
-
+    
     @ResponseBody
     @GetMapping("/active-count")
     public long getActiveUserCount() {
