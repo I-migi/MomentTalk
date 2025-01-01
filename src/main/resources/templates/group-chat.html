@@ -8,17 +8,50 @@
 </head>
 <body>
 <div class="container">
+    <!-- Header -->
     <div class="header">Group Chat</div>
 
-    <div class="group-list" id="groupList">
-        <!-- Group list items will be dynamically injected here -->
+    <!-- Group List Section -->
+    <div id="groupListContainer">
+        <div id="groupList" class="group-list"></div>
+        <div class="create-group">
+            <input type="text" id="groupName" placeholder="Enter group name">
+            <button id="createGroup">Create Group</button>
+        </div>
     </div>
 
-    <div class="create-group">
-        <input type="text" id="groupName" placeholder="Enter group name">
-        <button id="createGroup">Create Group</button>
+    <!-- Chat Section -->
+    <!-- Chat Section -->
+    <div id="chatBox" style="display: none;">
+        <!-- Back Button -->
+        <button id="backButton" class="back-button">Back</button>
+
+        <!-- Group Title -->
+        <h1 id="groupTitle" class="chat-room-title"></h1>
+
+        <!-- Chat Messages -->
+        <div id="chatMessages" class="chat-messages">
+            <!-- Older Messages Notice -->
+            <div id="olderMessageNotice" class="older-message-notice" style="display: none;">
+                Messages older than 5 minutes are hidden.
+            </div>
+        </div>
+
+        <!-- Chat Input and File Upload -->
+        <div class="chat-input-container">
+            <div class="chat-input">
+                <input id="messageInput" type="text" placeholder="Type your message...">
+                <button id="sendButton">Send</button>
+            </div>
+            <div class="file-upload">
+                <input type="file" id="fileInput" style="display: none;" accept="image/*,video/*,application/*">
+                <label for="fileInput" id="fileUploadButton" class="upload-button">📎 Upload File</label>
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- Scripts -->
 <script src="/js/group-chat.js" th:src="@{/js/group-chat.js}"></script>
 </body>
 </html>
