@@ -102,23 +102,21 @@ function joinGroupChat(roomId, roomName) {
 }
 let reconnectAttempts = 0;
 
+// WebSocket 연결 및 메시지 처리
 function connectToRoom(roomId, roomName) {
-    if (socket) socket.close();
+    if (socket) socket.close(); // 이전 연결 종료
 
     socket = new WebSocket(`ws://localhost:8080/ws/group/${roomId}`);
 
     socket.onopen = () => {
         console.log(`Connected to room: ${roomName}`);
-        reconnectAttempts = 0; // 재연결 시도 초기화
     };
 
     socket.onmessage = (event) => handleWebSocketMessage(event);
 
     socket.onclose = () => {
-        console.error(`Disconnected from room: ${roomName}`);
-        reconnectAttempts++;
-        const retryTime = Math.min(reconnectAttempts * 1000, 30000); // 최대 30초 지연
-        setTimeout(() => connectToRoom(roomId, roomName), retryTime);
+        console.log(`WebSocket closed for room: ${roomName}`);
+        // 재접속 로직 없음
     };
 
     socket.onerror = (error) => {
@@ -131,14 +129,32 @@ let currentFileMetadata = null;
 function handleWebSocketMessage(event) {
     try {
         if (typeof event.data === "string") {
+            // JSON 문자열 처리
             const parsedData = JSON.parse(event.data);
 
-            if (parsedData.type === "file") {
-                currentFileMetadata = parsedData; // 메타데이터 저장
-            } else if (parsedData.type === "text") {
-                displayMessage(parsedData.content, "received", parsedData.userName);
+            // 메시지 타입에 따른 분기 처리
+            switch (parsedData.type) {
+                case "text":
+                    displayMessage(parsedData.content, "received", parsedData.userName || "Unknown");
+                    break;
+
+                case "file":
+                    currentFileMetadata = parsedData; // 파일 메타데이터 저장
+                    break;
+
+                case "user-joined":
+                    displayMessage(parsedData.content, "system"); // 사용자 입장 메시지
+                    break;
+
+                case "user-left":
+                    displayMessage(parsedData.content, "system"); // 사용자 퇴장 메시지
+                    break;
+
+                default:
+                    console.warn("Unknown message type:", parsedData.type);
             }
         } else if (event.data instanceof Blob) {
+            // Blob 데이터 처리 (파일)
             if (currentFileMetadata) {
                 const fileUrl = URL.createObjectURL(event.data);
                 displayFileMessage(fileUrl, "received", currentFileMetadata.fileType);
@@ -149,6 +165,7 @@ function handleWebSocketMessage(event) {
         }
     } catch (error) {
         console.error("Error handling WebSocket message:", error);
+        console.log("Raw message data:", event.data);
     }
 }
 
@@ -243,10 +260,40 @@ function displayMessage(message, messageType, userName = "You") {
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
+let shouldReconnect = true; // WebSocket 재접속 여부를 제어하는 플래그
 
+// 방 나가기 API 호출 및 WebSocket 종료
+function leaveRoom() {
+    fetch('/group-chat/leave', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Failed to leave the group chat");
+            }
+            console.log("Successfully left the group chat");
+        })
+        .catch(error => {
+            console.error("Error leaving group chat:", error);
+        });
 
-document.getElementById("backButton").addEventListener("click", resetUI);
-document.getElementById("fileInput").addEventListener("change", async (event) => {
+    // WebSocket 연결 종료
+    if (socket) {
+        socket.close(); // WebSocket 종료
+        socket = null;  // WebSocket 참조 해제
+    }
+}
+window.addEventListener("beforeunload", (event) => {
+    leaveRoom(); // 방 나가기 API 호출
+    event.preventDefault();
+    event.returnValue = ""; // 브라우저 호환성을 위해 추가 (표준은 아니지만 동작 보장)
+});
+
+document.getElementById("backButton").addEventListener("click", () => {
+    leaveRoom(); // 방 나가기 API 호출
+    resetUI();   // UI 초기화
+});document.getElementById("fileInput").addEventListener("change", async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -289,14 +336,11 @@ function displayFileMessage(fileUrl, messageType, fileType = "") {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+// resetUI 함수 수정 (WebSocket 종료는 leaveRoom에서 처리)
 function resetUI() {
     document.getElementById("groupListContainer").style.display = "block";
     document.getElementById("chatBox").style.display = "none";
     chatMessages.innerHTML = "";
-    if (socket) {
-        socket.close(); // WebSocket 종료
-        socket = null;
-    }
 }
 
 // 페이지 로드 시 그룹 목록 가져오기

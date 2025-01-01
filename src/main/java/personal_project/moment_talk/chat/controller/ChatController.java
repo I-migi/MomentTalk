@@ -54,7 +54,15 @@ public class ChatController {
         return ResponseEntity.ok(Map.of("message", "User joined the room", "roomId", roomId));
     }
 
-
+    @PostMapping("/group-chat/leave")
+    public ResponseEntity<String> leaveGroupChat(HttpSession httpSession) {
+        String roomId = (String) redisTemplate.opsForHash().get("chat:session_to_room", httpSession.getId());
+        if (roomId == null || roomId.isEmpty()) {
+            return ResponseEntity.ok("단체 채팅방에 들어가 있지 않습니다");
+        }
+        groupChatWebSocketHandler.handleLeaveRoom(roomId, httpSession.getId());
+        return ResponseEntity.ok("단체 채팅방에서 나갔습니다");
+    }
 
     @ResponseBody
     @GetMapping("/group-chat/rooms")
@@ -79,22 +87,6 @@ public class ChatController {
         return Map.of("message", "Group chat room created successfully", "id", roomId, "name", roomName);
     }
 
-//    @GetMapping("/room")
-//    public ResponseEntity<Map<String , String >> getUserRoom(HttpSession httpSession) {
-//        String httpSessionId = httpSession.getId();
-//        String roomId = (String) redisTemplate.opsForHash().get("chat:session_to_room", httpSessionId);
-//
-//        if (roomId == null) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body(Map.of("message", "User is not part of any room"));
-//        }
-//        return ResponseEntity.ok(Map.of("roomId", roomId));
-//    }
-
-    /*
-    클라이언트가 보낸 JSON 데이터를 Map<String, String> 형태로 자동 변환
-    translatedText(번역된 text) = deepLTranslationService.translate(text);
-     */
     @ResponseBody
     @PostMapping("/translate")
     public Map<String, String> translate(@RequestBody Map<String, String> request) {
