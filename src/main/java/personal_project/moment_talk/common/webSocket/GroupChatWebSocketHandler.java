@@ -54,13 +54,11 @@ public class GroupChatWebSocketHandler extends TextWebSocketHandler {
     // 사용자 입장 처리
     public void handleJoinRoom(String roomId, String httpSessionId) {
         groupChatParticipants.addParticipantToGroupChatRoom(roomId, httpSessionId);
-        brodCastMessage(roomId, "user-joined", "User joined: " + httpSessionId);
     }
 
     // 사용자 퇴장 처리
     public void handleLeaveRoom(String roomId, String httpSessionId) {
         groupChatParticipants.removeParticipant(roomId, httpSessionId);
-        brodCastMessage(roomId, "user-left", "User left: " + httpSessionId);
     }
 
 
