@@ -21,7 +21,7 @@ public class GroupChatParticipants {
         String roomId = UUID.randomUUID().toString(); // 방 ID 생성
         redisTemplate.opsForHash().put(ROOM_KEY, roomName, roomId); // Redis에 저장
 
-        // Debugging: roomId 저장 여부 확인
+
         String savedRoomId = (String) redisTemplate.opsForHash().get(ROOM_KEY, roomName);
         System.out.println("Saved Room ID: " + savedRoomId);
 
@@ -40,8 +40,23 @@ public class GroupChatParticipants {
     }
 
     public void removeParticipant(String roomId, String httpSessionId) {
-        redisTemplate.opsForSet().remove(PARTICIPANTS_KEY_PREFIX + roomId + ":participants", httpSessionId);
+        String key = PARTICIPANTS_KEY_PREFIX + roomId + ":participants";
+        redisTemplate.opsForSet().remove(key, httpSessionId);
+        redisTemplate.opsForHash().delete(PRIVATE_ROOM_ID, httpSessionId);
 
+        if (Boolean.TRUE.equals(redisTemplate.opsForSet().size(key) == 0)) {
+            redisTemplate.delete(key);
+
+            Map<Object, Object> entries = redisTemplate.opsForHash().entries(ROOM_KEY);
+            for (Map.Entry<Object, Object> entry : entries.entrySet()) {
+                if (roomId.equals(entry.getValue())) {
+                    redisTemplate.opsForHash().delete(ROOM_KEY, entry.getKey());
+                    break;
+                }
+            }
+
+            redisTemplate.opsForHash().delete(ROOM_KEY, roomId);
+        }
     }
 
     public void addParticipantToGroupChatRoom(String roomId, String httpSessionId) {
