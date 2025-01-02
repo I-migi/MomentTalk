@@ -10,12 +10,23 @@ body, html {
     min-height: 100vh;
 }
 
+
 .container {
     width: 600px;
     background: #ffffff;
     border-radius: 15px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* 좌우로 요소 배치 */
+    position: relative;
 }
 
 .header {
@@ -86,20 +97,23 @@ body, html {
 }
 
 .back-button {
-    background-color: #f44336;
+    position: absolute;
+    top: 10px; /* Adjust vertical alignment */
+    left: 10px; /* Move to the left side */
+    background: none;
     border: none;
-    color: white;
-    padding: 10px 15px;
-    margin-bottom: 10px;
+    color: #5e72eb;
+    font-size: 1.5rem;
     cursor: pointer;
-    border-radius: 5px;
+    padding: 0;
 }
-
 .chat-room-title {
-    font-size: 24px;
+    font-size: 1.25rem;
     font-weight: bold;
+    color: #1f2937;
+    margin: 0 auto; /* 가운데 정렬 */
     text-align: center;
-    margin-bottom: 10px;
+    flex-grow: 1; /* 제목을 가운데로 고정 */
 }
 
 .chat-messages {
@@ -109,21 +123,10 @@ body, html {
     color: #ffffff;
     border-radius: 10px;
     padding: 15px;
-    margin-bottom: 15px;
     box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
-    gap: 10px; /* 메시지 간격 */
-}
-
-.chat-message {
-    max-width: 75%;
-    padding: 12px 18px;
-    border-radius: 15px;
-    font-size: 0.95rem;
-    word-wrap: break-word;
-    line-height: 1.4;
-    display: inline-block;
+    gap: 10px;
 }
 
 .message-sent {
@@ -175,8 +178,9 @@ body, html {
 }
 
 .file-upload label {
+    font-size: 1rem;
+    padding: 5px;
     color: #667eea;
-    font-size: 1.5rem;
     cursor: pointer;
 }
 .file-upload {
@@ -193,14 +197,14 @@ body, html {
     cursor: pointer;
 }
 #chatBox {
-    display: none;
+    display: flex;
     flex-direction: column;
-    margin-top: 30px;
     gap: 20px;
-    height: calc(100% - 60px);
+    height: 500px; /* 고정된 높이 */
     width: 100%;
-    box-sizing: border-box; /* Ensure padding doesn't overflow the width */
-    overflow: hidden; /* Prevents unwanted scroll on small screens */
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative; /* Back 버튼 위치 설정을 위한 기준 */
 }
 
 #chatMessages .message-sent {
@@ -286,17 +290,6 @@ body, html {
     padding: 5px;
 }
 
-.back-button {
-    background-color: #f44336;
-    color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 15px;
-    font-size: 1rem;
-    cursor: pointer;
-}
-
 #chatMessages {
     flex: 1;
     border: 1px solid #e2e8f0;
@@ -305,12 +298,10 @@ body, html {
     padding: 20px;
     background-color: #1e293b;
     box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.1);
-    font-size: 1rem;
     color: #ffffff;
     display: flex;
     flex-direction: column;
-    width: 100%;
-    box-sizing: border-box; /* Ensure padding doesn't overflow the width */
+    gap: 10px;
 }
 
 #chatMessages .message-received {

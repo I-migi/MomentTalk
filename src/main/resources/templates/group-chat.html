@@ -8,11 +8,9 @@
 </head>
 <body>
 <div class="container">
-    <!-- Header -->
-    <div class="header">Group Chat</div>
-
     <!-- Group List Section -->
     <div id="groupListContainer">
+        <h1 class="header">Group Chat</h1>
         <div id="groupList" class="group-list"></div>
         <div class="create-group">
             <input type="text" id="groupName" placeholder="Enter group name">
@@ -21,13 +19,12 @@
     </div>
 
     <!-- Chat Section -->
-    <!-- Chat Section -->
     <div id="chatBox" style="display: none;">
-        <!-- Back Button -->
-        <button id="backButton" class="back-button">Back</button>
-
-        <!-- Group Title -->
-        <h1 id="groupTitle" class="chat-room-title"></h1>
+        <!-- Header with Back Button and Chat Room Title -->
+        <div class="chat-header">
+            <button id="backButton" class="back-button">&#8592;</button>
+            <h1 id="groupTitle" class="chat-room-title"></h1>
+        </div>
 
         <!-- Chat Messages -->
         <div id="chatMessages" class="chat-messages">
@@ -45,7 +42,7 @@
             </div>
             <div class="file-upload">
                 <input type="file" id="fileInput" style="display: none;" accept="image/*,video/*,application/*">
-                <label for="fileInput" id="fileUploadButton" class="upload-button">📎 Upload File</label>
+                <label for="fileInput" id="fileUploadButton" class="upload-button">📎</label>
             </div>
         </div>
     </div>
