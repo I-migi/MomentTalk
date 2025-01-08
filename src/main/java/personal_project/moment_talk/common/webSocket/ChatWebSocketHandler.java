@@ -194,14 +194,25 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     }
 
     private void handleTextMessageGroup(WebSocketMessage<?> message, String userName, List<WebSocketSession> participantWebSocketSessions) throws IOException {
-        if (!badWordFiltering.check(message.getPayload().toString())) {
-            String payload = message.getPayload().toString();
+        String payload = message.getPayload().toString();
+
+        if (!badWordFiltering.check(payload)) {
+            // 금칙어가 없는 경우 정상 메시지 전송
             for (WebSocketSession opponentWebSocketSession : participantWebSocketSessions) {
                 sendMessageSafely(opponentWebSocketSession, payload, userName);
             }
         } else {
+            // 금칙어가 있는 경우 "*******"를 JSON 형식으로 전송
+            Map<String, Object> filteredMessage = new HashMap<>();
+            filteredMessage.put("type", "text");
+            filteredMessage.put("content", "*******"); // 금칙어 대체 문자열
+            filteredMessage.put("userName", userName);
+
+            String jsonMessage = objectMapper.writeValueAsString(filteredMessage);
+
             for (WebSocketSession opponentWebSocketSession : participantWebSocketSessions) {
-                opponentWebSocketSession.sendMessage(new TextMessage("*******"));
+                opponentWebSocketSession.sendMessage(new TextMessage(jsonMessage));
+                log.info("Filtered message sent: {}", jsonMessage);
             }
         }
     }
