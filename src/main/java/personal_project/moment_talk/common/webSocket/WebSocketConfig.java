@@ -68,8 +68,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
         return (handler) -> new WebSocketHandlerDecorator(handler) {
             @Override
             public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-                session.setBinaryMessageSizeLimit(10 * 1024 * 1024); // 10MB
-                session.setTextMessageSizeLimit(10 * 1024 * 1024); // 10MB
+                session.setBinaryMessageSizeLimit(100 * 1024 * 1024); // 10MB
+                session.setTextMessageSizeLimit(100 * 1024 * 1024); // 10MB
                 super.afterConnectionEstablished(session);
             }
         };
@@ -83,7 +83,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
     public ServletServerContainerFactoryBean createWebSocketContainer() {
         ServletServerContainerFactoryBean container = new ServletServerContainerFactoryBean();
         container.setMaxTextMessageBufferSize(200 * 1024);  // 200KB
-        container.setMaxBinaryMessageBufferSize( 10 * 1024 * 1024);
+        container.setMaxBinaryMessageBufferSize( 100 * 1024 * 1024);
         return container;
     }
 
