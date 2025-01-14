@@ -44,7 +44,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
      */
     private final ChatWebSocketHandler chatWebsocketHandler;
-    private final GroupChatWebSocketHandler groupChatWebsocketHandler;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
@@ -52,7 +51,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 .setHandshakeHandler(new DefaultHandshakeHandler())
                 .addInterceptors(new HttpSessionHandshakeInterceptor());
 
-        registry.addHandler(groupChatWebsocketHandler, "/group-chat/**").setAllowedOrigins("*")
+        registry.addHandler(chatWebsocketHandler, "/group-chat/**").setAllowedOrigins("*")
                 .setHandshakeHandler(new DefaultHandshakeHandler())
                 .addInterceptors(new HttpSessionHandshakeInterceptor());
     }
