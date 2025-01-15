@@ -28,7 +28,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         String path = webSocketSession.getUri().getPath();
         if (path.startsWith("/ws/connect")) {
             oneToOneWebSocketHelper.handleOneToOneConnection(webSocketSession);
-        } else if (path.startsWith("/ws/group")) {
+        } else if (path.startsWith("/ws/group") || path.startsWith("/ws/music-game")) {
             String httpSessionId = webSocketHelper.getHttpSessionIdFromWebSocketSession(webSocketSession);
             webSocketSessionManager.addSession(httpSessionId, webSocketSession);
         }
@@ -43,7 +43,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
         if (path.startsWith("/ws/connect")) {
             oneToOneWebSocketHelper.handleOneToOneMessage(webSocketSession, message, httpSessionId, userName);
-        } else if (path.startsWith("/ws/group")) {
+        } else if (path.startsWith("/ws/group") || path.startsWith("/ws/music-game")) {
             groupWebSocketHelper.handleGroupMessage(webSocketSession, message, path, httpSessionId, userName);
 
         }

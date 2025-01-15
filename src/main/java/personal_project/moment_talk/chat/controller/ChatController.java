@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import personal_project.moment_talk.chat.dto.CreateGroupRequest;
 import personal_project.moment_talk.chat.service.DeepLTranslationService;
 import personal_project.moment_talk.common.redis.GroupChatParticipants;
+import personal_project.moment_talk.common.redis.MusicGameService;
 
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ public class ChatController {
 
     private final DeepLTranslationService deepLTranslationService;
     private final GroupChatParticipants groupChatParticipants;
+    private final MusicGameService musicGameService;
     private final RedisTemplate redisTemplate;
 
     @GetMapping("/1-to-1-chat")
@@ -33,6 +35,10 @@ public class ChatController {
         return "group-chat";
     }
 
+    @GetMapping("/music-game")
+    public String musicGame() {
+        return "music-game";
+    }
 
     @PostMapping("/join")
     @ResponseBody
@@ -48,6 +54,30 @@ public class ChatController {
         return ResponseEntity.ok(Map.of("message", "User joined the room", "roomId", roomId));
     }
 
+    @PostMapping("/music-game/join")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> joinMusicGame(@RequestBody Map<String, String> request, HttpSession httpSession) {
+        String roomId = request.get("roomId");
+        String httpSessionId = httpSession.getId();
+        if (roomId == null || roomId.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Invalid room ID!"));
+        }
+        groupChatParticipants.joinGroupChatRoom(roomId, httpSessionId);
+        return ResponseEntity.ok(Map.of("message", "User joined the room", "roomId", roomId));
+    }
+
+    @ResponseBody
+    @PostMapping("/music-game/rooms")
+    public Map<String, String> createMusicGameRoom(@RequestBody CreateGroupRequest createGroupRequest, HttpSession httpSession) {
+        String roomName = createGroupRequest.name();
+        String httpSessionId = httpSession.getId();
+
+        musicGameService.createMusicGameRoom(roomName, httpSessionId);
+
+        String roomId = (String) redisTemplate.opsForHash().get("chat:musicGameRooms", roomName);
+        return Map.of("message", "Music Game room created", "id", roomId, "name", roomName);
+    }
+
     @PostMapping("/group-chat/leave")
     public ResponseEntity<String> leaveGroupChat(HttpSession httpSession) {
         if (!groupChatParticipants.leaveGroupChatRoom(httpSession.getId())) {
@@ -60,6 +90,12 @@ public class ChatController {
     @GetMapping("/group-chat/rooms")
     public List<Map<String, String>> groupChatRooms() {
         return groupChatParticipants.getAllGroupChatRooms();
+    }
+
+    @ResponseBody
+    @GetMapping("/music-game/rooms")
+    public List<Map<String, String>> musicGameRooms() {
+        return musicGameService.getAllMusicGameRooms();
     }
 
     @PostMapping("/group-chat/rooms")
