@@ -20,11 +20,6 @@ public class GroupChatParticipants {
     public void createGroupChatRoom(String roomName, String httpSessionId) {
         String roomId = UUID.randomUUID().toString(); // 방 ID 생성
         redisTemplate.opsForHash().put(ROOM_KEY, roomName, roomId); // Redis에 저장
-
-
-        String savedRoomId = (String) redisTemplate.opsForHash().get(ROOM_KEY, roomName);
-        System.out.println("Saved Room ID: " + savedRoomId);
-
         redisTemplate.expire(PARTICIPANTS_KEY_PREFIX + roomId + ":participants", 1, TimeUnit.DAYS);
 
         List<String> participants = new ArrayList<>();

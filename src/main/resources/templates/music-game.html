@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Game</title>
+    <link rel="stylesheet" href="/css/music-game.css" th:href="@{/css/music-game.css}" />
+</head>
+<body>
+<div class="container">
+    <!-- Group List Section -->
+    <div id="groupListContainer">
+        <h1 class="header">Music Game</h1>
+        <div id="groupList" class="group-list"></div>
+        <div class="create-group">
+            <input type="text" id="groupName" placeholder="Enter group name">
+            <button id="createGroup">Create Group</button>
+        </div>
+    </div>
+
+    <!-- Chat Section -->
+    <div id="chatBox" style="display: none;">
+        <!-- Header with Back Button and Chat Room Title -->
+        <div class="chat-header">
+            <button id="backButton" class="back-button">&#8592;</button>
+            <h1 id="groupTitle" class="chat-room-title"></h1>
+        </div>
+
+        <!-- Chat Messages -->
+        <div id="chatMessages" class="chat-messages">
+            <!-- Older Messages Notice -->
+            <div id="olderMessageNotice" class="older-message-notice" style="display: none;">
+                Messages older than 5 minutes are hidden.
+            </div>
+        </div>
+
+        <!-- Chat Input and File Upload -->
+        <div class="chat-input-container">
+            <div class="chat-input">
+                <input id="messageInput" type="text" placeholder="Type your message...">
+                <button id="sendButton">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="/js/music-game.js" th:src="@{/js/music-game.js}"></script>
+</body>
+</html>

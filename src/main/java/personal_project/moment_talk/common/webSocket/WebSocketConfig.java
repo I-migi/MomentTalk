@@ -54,6 +54,10 @@ public class WebSocketConfig implements WebSocketConfigurer {
         registry.addHandler(chatWebsocketHandler, "/group-chat/**").setAllowedOrigins("*")
                 .setHandshakeHandler(new DefaultHandshakeHandler())
                 .addInterceptors(new HttpSessionHandshakeInterceptor());
+
+        registry.addHandler(chatWebsocketHandler, "/music-game/**").setAllowedOrigins("*")
+                .setHandshakeHandler(new DefaultHandshakeHandler())
+                .addInterceptors(new HttpSessionHandshakeInterceptor());
     }
 
     /*
