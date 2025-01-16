@@ -31,6 +31,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         } else if (path.startsWith("/ws/group") || path.startsWith("/ws/music-game")) {
             String httpSessionId = webSocketHelper.getHttpSessionIdFromWebSocketSession(webSocketSession);
             webSocketSessionManager.addSession(httpSessionId, webSocketSession);
+            groupWebSocketHelper.handleGroupConnection(webSocketSession);
         }
     }
 
