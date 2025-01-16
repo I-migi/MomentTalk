@@ -60,8 +60,12 @@ public class GroupChatParticipants {
 
     // 그룹 채팅 참가
     public void joinGroupChatRoom(String roomId, String httpSessionId) {
-        redisTemplate.opsForSet().add(PARTICIPANTS_KEY_PREFIX + roomId + ":participants", httpSessionId);
-        redisTemplate.opsForHash().put(PRIVATE_ROOM_ID, httpSessionId, roomId);
+        if (!redisTemplate.opsForHash().hasKey(PRIVATE_ROOM_ID, httpSessionId)) {
+            redisTemplate.opsForSet().add(PARTICIPANTS_KEY_PREFIX + roomId + ":participants", httpSessionId);
+            redisTemplate.opsForHash().put(PRIVATE_ROOM_ID, httpSessionId, roomId);
+        }
+
+
     }
 
     public Set<Object> getParticipants(String roomId) {

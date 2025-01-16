@@ -18,27 +18,32 @@
         </div>
     </div>
 
-    <!-- Chat Section -->
-    <div id="chatBox" style="display: none;">
-        <!-- Header with Back Button and Chat Room Title -->
-        <div class="chat-header">
-            <button id="backButton" class="back-button">&#8592;</button>
-            <h1 id="groupTitle" class="chat-room-title"></h1>
+    <!-- Main Chat Area: Leaderboard and ChatBox -->
+    <div id="chatContainer" style="display: none;"> <!-- 전체 묶음 -->
+        <div id="leaderboardContainer" class="leaderboard-container">
+            <h2>Leaderboard</h2>
+            <ul id="leaderboard" class="leaderboard"></ul>
         </div>
 
-        <!-- Chat Messages -->
-        <div id="chatMessages" class="chat-messages">
-            <!-- Older Messages Notice -->
-            <div id="olderMessageNotice" class="older-message-notice" style="display: none;">
-                Messages older than 5 minutes are hidden.
+        <div id="chatBox" class="chat-box">
+            <!-- Header with Back Button and Chat Room Title -->
+            <div class="chat-header">
+                <button id="backButton" class="back-button">&#8592;</button>
+                <h1 id="groupTitle" class="chat-room-title"></h1>
             </div>
-        </div>
-
-        <!-- Chat Input and File Upload -->
-        <div class="chat-input-container">
-            <div class="chat-input">
-                <input id="messageInput" type="text" placeholder="Type your message...">
-                <button id="sendButton">Send</button>
+            <!-- Chat Messages -->
+            <div id="chatMessages" class="chat-messages">
+                <!-- Older Messages Notice -->
+                <div id="olderMessageNotice" class="older-message-notice" style="display: none;">
+                    Messages older than 5 minutes are hidden.
+                </div>
+            </div>
+            <!-- Chat Input -->
+            <div class="chat-input-container">
+                <div class="chat-input">
+                    <input id="messageInput" type="text" placeholder="Type your message...">
+                    <button id="sendButton">Send</button>
+                </div>
             </div>
         </div>
     </div>

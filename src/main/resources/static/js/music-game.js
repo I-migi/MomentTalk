@@ -22,7 +22,7 @@ function fetchGroupChatRooms() {
                 groupItem.className = 'group-item';
 
                 const groupName = document.createElement('span');
-                groupName.textContent = room.name;
+                groupName.textContent = `${room.name} (${room.participation}/${room.maxParticipation})`;
 
                 const joinButton = document.createElement('button');
                 joinButton.textContent = 'Join';
@@ -36,7 +36,6 @@ function fetchGroupChatRooms() {
         .catch(error => console.error('Error fetching group chat rooms:', error));
 }
 
-
 function joinGroupChat(roomId, roomName) {
     if (!roomId) {
         alert("Invalid room ID!");
@@ -44,7 +43,6 @@ function joinGroupChat(roomId, roomName) {
     }
 
     console.log(`Joining room with ID: ${roomId}`);
-    // 서버에 참가 요청
     fetch('/music-game/join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -59,14 +57,20 @@ function joinGroupChat(roomId, roomName) {
         .then(data => {
             console.log("Join success:", data);
 
+            sessionStorage.setItem("roomId", roomId);
+            sessionStorage.setItem("roomName", roomName);
+
             // UI 업데이트
             const groupListContainer = document.getElementById('groupListContainer');
-            const chatBox = document.getElementById('chatBox');
+            const chatBox = document.getElementById('chatContainer');
             const groupTitle = document.getElementById('groupTitle');
             groupTitle.textContent = roomName;
 
             groupListContainer.style.display = 'none';
             chatBox.style.display = 'flex';
+
+            // 리더보드 업데이트
+            fetchParticipants(roomId);
 
             // WebSocket 연결 설정
             connectToRoom(roomId, roomName);
@@ -187,7 +191,10 @@ document.getElementById("createGroup").addEventListener("click", async () => {
     try {
         const groupData = await createGroupChat(groupName);
         alert(`Group "${groupData.name}" created successfully!`);
+
         joinGroupChat(groupData.id, groupData.name); // 생성 후 바로 방에 참여
+        fetchParticipants(groupData.id); // 리더보드 업데이트
+
         groupNameInput.value = ""; // 입력창 초기화
     } catch (error) {
         console.error("Error creating group:", error);
@@ -210,11 +217,6 @@ function displayMessage(message, messageType, userName = "You") {
                 <span class="message-time">${timeString}</span>
             </div>
             <div class="message-content">${message}</div>
-            ${
-        messageType === "received"
-            ? `<button class="translate-button" data-message="${message}">Translate</button>`
-            : ""
-    }
         </div>
     `;
 
@@ -225,7 +227,7 @@ let shouldReconnect = true; // WebSocket 재접속 여부를 제어하는 플래
 
 // 방 나가기 API 호출 및 WebSocket 종료
 function leaveRoom() {
-    fetch('/group-chat/leave', {
+    fetch('/music-game/leave', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
     })
@@ -234,34 +236,102 @@ function leaveRoom() {
                 throw new Error("Failed to leave the group chat");
             }
             console.log("Successfully left the group chat");
+
         })
         .catch(error => {
             console.error("Error leaving group chat:", error);
         });
-
     // WebSocket 연결 종료
     if (socket) {
         socket.close(); // WebSocket 종료
         socket = null;  // WebSocket 참조 해제
     }
 }
+
+function fetchParticipants(roomId) {
+    fetch(`/music-game/participants?roomId=${roomId}`)
+        .then(response => response.json())
+        .then(data => {
+            const leaderboardContainer = document.getElementById('leaderboardContainer');
+            const leaderboard = document.getElementById('leaderboard');
+
+            leaderboard.innerHTML = ''; // 기존 리스트 초기화
+
+            data.participants.forEach(participant => {
+                const participantItem = document.createElement('li');
+                participantItem.textContent = participant; // 이름 표시
+                leaderboard.appendChild(participantItem);
+            });
+
+            leaderboardContainer.style.display = 'block'; // 리더보드 표시
+        })
+        .catch(error => console.error('Error fetching participants:', error));
+}
+
+function recoverRoomData() {
+    const roomId = sessionStorage.getItem("roomId");
+    const roomName = sessionStorage.getItem("roomName");
+
+    if (roomId && roomName) {
+        console.log(`Recovering room: ${roomName} (${roomId})`);
+        joinGroupChat(roomId, roomName); // 이전 방에 재연결
+    }
+}
+
+let isReloading = false;
 window.addEventListener("beforeunload", (event) => {
-    leaveRoom(); // 방 나가기 API 호출
-    event.preventDefault();
-    event.returnValue = ""; // 브라우저 호환성을 위해 추가 (표준은 아니지만 동작 보장)
+
+    if (isReloading) {
+        console.log("Page is reloading");
+    } else {
+        console.log("Page is closing");
+        leaveRoom();
+        sessionStorage.removeItem("roomId");
+        sessionStorage.removeItem("roomName");
+    }
 });
+
+// 새로고침 여부 감지
+window.addEventListener("keydown", (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === "r") {
+        isReloading = true; // Ctrl+R 또는 Cmd+R로 새로고침 감지
+    }
+});
+
+window.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+        if (!isReloading) {
+            leaveRoom(); // 페이지가 닫힐 때 leaveRoom 호출
+        }
+    }
+});
+
+window.onload = () => {
+    console.log("window onLoad")
+    const roomId = sessionStorage.getItem("roomId");
+    const roomName = sessionStorage.getItem("roomName");
+    if (roomId && roomName) {
+        console.log("recovery")
+
+        recoverRoomData(); // 새로고침 시 방 복구
+    } else {
+        console.log("main")
+
+        fetchGroupChatRooms(); // 새로고침 시 방 정보가 없으면 기본 방 목록 불러오기
+    }
+};
 
 document.getElementById("backButton").addEventListener("click", () => {
     leaveRoom(); // 방 나가기 API 호출
+    sessionStorage.removeItem("roomId");
+    sessionStorage.removeItem("roomName");
     resetUI();   // UI 초기화
+    fetchGroupChatRooms(); // 새로고침 시 방 정보가 없으면 기본 방 목록 불러오기
 });
 
 // resetUI 함수 수정 (WebSocket 종료는 leaveRoom에서 처리)
 function resetUI() {
     document.getElementById("groupListContainer").style.display = "block";
-    document.getElementById("chatBox").style.display = "none";
+    document.getElementById("chatContainer").style.display = "none";
     chatMessages.innerHTML = "";
 }
-
-// 페이지 로드 시 그룹 목록 가져오기
-window.onload = fetchGroupChatRooms;

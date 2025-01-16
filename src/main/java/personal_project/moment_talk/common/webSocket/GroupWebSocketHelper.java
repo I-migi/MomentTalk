@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vane.badwordfiltering.BadWordFiltering;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import personal_project.moment_talk.common.redis.GroupChatParticipants;
+import personal_project.moment_talk.user.repository.UserRepository;
 
 import java.io.IOException;
 import java.util.*;
@@ -21,6 +23,8 @@ public class GroupWebSocketHelper {
     private final GroupChatParticipants groupChatParticipants;
     private final WebSocketHelper webSocketHelper;
     private final ObjectMapper objectMapper;
+    private final UserRepository userRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     private void handleTextMessageGroup(WebSocketMessage<?> message, String userName, List<WebSocketSession> participantWebSocketSessions) throws IOException {
         String payload = message.getPayload().toString();
@@ -79,5 +83,39 @@ public class GroupWebSocketHelper {
             log.error("Error processing binary message:", e);
             webSocketSession.close(CloseStatus.SERVER_ERROR);
         }
+    }
+
+    public void handleGroupConnection(WebSocketSession webSocketSession) throws IOException {
+        String httpSessionId = webSocketHelper.getHttpSessionIdFromWebSocketSession(webSocketSession);
+        String userName = userRepository.findBySessionId(httpSessionId).get().getUserName();
+
+        // redis 에서 해당 채팅방의 모든 유저들의 webSocketSession 리스트를 구해서 메시지 전송
+        String roomId = (String) redisTemplate.opsForHash().get("chat:session_to_room", httpSessionId);
+        if (roomId != null) {
+            roomId = roomId.replace("\"","");
+            Set<Object> members = redisTemplate.opsForSet().members("chat:room:" + roomId + ":participants");
+            List<Object> participants = new ArrayList<>(members);
+
+                for (Object participant : participants) {
+                    if (!participant.equals(httpSessionId)) {
+                        WebSocketSession participantWebsocketSession = webSocketSessionManager.getSession((String) participant);
+                        if (participantWebsocketSession != null) {
+                            participantWebsocketSession.sendMessage(new TextMessage(""));
+
+                            Map<String, Object> message = new HashMap<>();
+                            message.put("type", "text");
+                            message.put("content", userName + " 이 입장했습니다"); // 금칙어 대체 문자열
+                            message.put("userName", userName);
+                            String jsonMessage = objectMapper.writeValueAsString(message);
+                            log.info("Filtered message sent: {}", jsonMessage);
+
+                            participantWebsocketSession.sendMessage(new TextMessage(jsonMessage));
+                        }
+                }
+            }
+
+        }
+
+
     }
 }
