@@ -48,9 +48,10 @@ function joinGroupChat(roomId, roomName) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ roomId }),
     })
-        .then(response => {
+        .then(async response => {
             if (!response.ok) {
-                throw new Error(`Failed to join room: ${response.status}`);
+                const errorData = await response.json();
+                throw new Error(errorData.errorMessage || "Failed to join room");
             }
             return response.json();
         })
@@ -77,7 +78,7 @@ function joinGroupChat(roomId, roomName) {
         })
         .catch(error => {
             console.error("Error joining room:", error);
-            alert("Failed to join the room. Please try again.");
+            alert(error.message);
         });
 }
 
