@@ -3,6 +3,7 @@ package personal_project.moment_talk.common.redis;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import personal_project.moment_talk.common.exception.ParticipantLimitException;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -16,8 +17,15 @@ public class MusicGameService {
     private static final String PARTICIPANTS_KEY_PREFIX = "chat:room:";
     private static final String PRIVATE_ROOM_ID = "chat:session_to_room";
 
-    public void joinMusicGame(String roomId, String httpSessionId) {
-
+    // 그룹 채팅 참가
+    public void joinMusicGame(String roomId, String httpSessionId){
+        if ( redisTemplate.opsForSet().size(PARTICIPANTS_KEY_PREFIX + roomId + ":participants") == 4 ) {
+            throw new ParticipantLimitException();
+        }
+        if (!redisTemplate.opsForHash().hasKey(PRIVATE_ROOM_ID, httpSessionId)) {
+            redisTemplate.opsForSet().add(PARTICIPANTS_KEY_PREFIX + roomId + ":participants", httpSessionId);
+            redisTemplate.opsForHash().put(PRIVATE_ROOM_ID, httpSessionId, roomId);
+        }
     }
 
     public List<Map<String, String>> getAllMusicGameRooms() {

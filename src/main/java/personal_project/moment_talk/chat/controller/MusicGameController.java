@@ -1,5 +1,6 @@
 package personal_project.moment_talk.chat.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MusicGameController {
 
-    private final GroupChatParticipants groupChatParticipants;
     private final MusicGameService musicGameService;
     private final RedisTemplate redisTemplate;
     private final UserRepository userRepository;
@@ -31,15 +31,19 @@ public class MusicGameController {
         return "music-game";
     }
 
+    @Operation(
+            summary = "노래 맞추기 게임 방 참가",
+            description = "노래 맞추기 게임 방 참가, 최대 정원: 4",
+            tags = {"Music-Game"})
     @PostMapping("/music-game/join")
     @ResponseBody
-    public ResponseEntity<Map<String, String>> joinMusicGame(@RequestBody Map<String, String> request, HttpSession httpSession) {
+    public ResponseEntity<Map<String, String>> joinMusicGame(@RequestBody Map<String, String> request, HttpSession httpSession){
         String roomId = request.get("roomId");
         String httpSessionId = httpSession.getId();
         if (roomId == null || roomId.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "Invalid room ID!"));
         }
-        groupChatParticipants.joinGroupChatRoom(roomId, httpSessionId);
+        musicGameService.joinMusicGame(roomId, httpSessionId);
         return ResponseEntity.ok(Map.of("message", "User joined the room", "roomId", roomId));
     }
 
