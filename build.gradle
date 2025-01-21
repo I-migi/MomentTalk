@@ -44,6 +44,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket' // WebSocket 지원
     implementation 'org.springframework:spring-messaging' // WebSocket 메시징 지원
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0' // Use the latest version
+    implementation 'com.google.api-client:google-api-client:1.33.0'
+    implementation 'com.google.oauth-client:google-oauth-client-jetty:1.23.0'
+    implementation 'com.google.apis:google-api-services-youtube:v3-rev20230816-2.0.0'
+    implementation 'com.google.http-client:google-http-client-jackson2:1.39.2'
 
 
 }

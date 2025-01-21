@@ -93,5 +93,11 @@ public class MusicGameController {
     }
 
 
+    @GetMapping("/song-music")
+    public String songMusic() {
+        return "song-player";
+    }
+
+
 
 }
