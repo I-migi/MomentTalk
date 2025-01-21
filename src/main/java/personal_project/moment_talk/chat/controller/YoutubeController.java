@@ -49,7 +49,12 @@ public class YoutubeController {
     @PostMapping("/validate-guess")
     public ResponseEntity<?> validateGuess(@RequestBody GuessRequest request) {
         String videoTitle = youtubeService.getVideoTitle(request.videoId());
-        boolean isCorrect = videoTitle.toLowerCase().contains(request.userGuess().toLowerCase()); // 유사도 검사 (간단한 포함 검사)
+
+        // 유저 입력과 제목을 정리: 대소문자 무시, 공백 제거
+        String normalizedTitle = videoTitle.replaceAll("\\s+", "").toLowerCase();
+        String normalizedGuess = request.userGuess().replaceAll("\\s+", "").toLowerCase();
+
+        boolean isCorrect = normalizedTitle.equals(normalizedGuess); // 정확히 비교
 
         Map<String, Object> response = new HashMap<>();
         response.put("correct", isCorrect);
