@@ -41,13 +41,12 @@ MomentTalk은 사용자들이 주제나 관심사에 따라 즉시 연결되고,
 
 ## 🖥️ 서비스 화면
 
-![image](https://github.com/user-attachments/assets/1e3de3fe-745b-4a37-823b-8ace00a419fd)
-
-![image](https://github.com/user-attachments/assets/14f20ee4-e549-4e37-8869-fe9af2903171)
-
-![image](https://github.com/user-attachments/assets/92a7c32a-4a28-4a80-a21d-997ba99f75ff)
-
-![image](https://github.com/user-attachments/assets/983b2062-69f8-47a7-86cf-94f95a9e3f02)
+| 화면 | 이미지 |
+|------|--------|
+| 메인 화면 | ![Login Screen](https://github.com/user-attachments/assets/1e3de3fe-745b-4a37-823b-8ace00a419fd) |
+| 채팅 검색 화면 | ![Main Screen](https://github.com/user-attachments/assets/14f20ee4-e549-4e37-8869-fe9af2903171) |
+| 채팅 화면 | ![Settings Screen](https://github.com/user-attachments/assets/92a7c32a-4a28-4a80-a21d-997ba99f75ff) |
+| 그룹 채팅 화면 | ![Detail Screen](https://github.com/user-attachments/assets/983b2062-69f8-47a7-86cf-94f95a9e3f02) |
 
 
 
