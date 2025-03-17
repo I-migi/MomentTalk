@@ -10,6 +10,7 @@ import com.google.api.services.youtube.model.SearchResult;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import personal_project.moment_talk.chat.dto.YouTubeApiResponse;
 
 import java.io.File;
@@ -24,14 +25,15 @@ import java.util.regex.Pattern;
 @Service
 public class YoutubeService {
 
-    private final ObjectMapper objectMapper;
     @Value("${YOUTUBE_KEY}")
     private String apiKey;
+
+    private static final String YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/playlistItems";
+
 
     private final Map<String, String> videoTitleMap;
 
     public YoutubeService(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
         Map<String, String > tempMap;
         try {
             File file = new File("src/main/resources/videoTitleMap.json");
@@ -43,108 +45,27 @@ public class YoutubeService {
         this.videoTitleMap = tempMap;
     }
 
-
-    public String searchVideo(String query) throws IOException {
-        // JSON 데이터를 처리하기 위한 JsonFactory 객체 생성
-        JsonFactory jsonFactory = new JacksonFactory();
-
-        // YouTube 객체를 빌드하여 API에 접근할 수 있는 YouTube 클라이언트 생성
-        YouTube youtube = new YouTube.Builder(
-                new com.google.api.client.http.javanet.NetHttpTransport(),
-                jsonFactory,
-                request -> {})
-                .build();
-
-        // YouTube Search API를 사용하여 동영상 검색을 위한 요청 객체 생성
-        YouTube.Search.List search = youtube.search().list(Collections.singletonList("id,snippet"));
-
-        // API 키 설정
-        search.setKey(apiKey);
-
-        // 검색어 설정
-        search.setQ(query);
-
-        // 검색 요청 실행 및 응답 받아오기
-        SearchListResponse searchResponse = search.execute();
-
-        // 검색 결과에서 동영상 목록 가져오기
-        List<SearchResult> searchResultList = searchResponse.getItems();
-
-        if (searchResultList != null && searchResultList.size() > 0) {
-            //검색 결과 중 첫 번째 동영상 정보 가져오기
-            SearchResult searchResult = searchResultList.get(0);
-
-            // 동영상의 ID와 제목 가져오기
-            String videoId = searchResult.getId().getVideoId();
-            String videoTitle = searchResult.getSnippet().getTitle();
-
-            return "Title: " + videoTitle + "\nURL: https://www.youtube.com/watch?v=" + videoId;
-        }
-        return "검색 결과가 없습니다";
-    }
-
     public String getVideoTitle(String videoId) {
-
         return videoTitleMap.get(videoId);
-//        String url = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + videoId + "&key=" + apiKey;
-
-//        RestTemplate restTemplate = new RestTemplate();
-//
-//        YouTubeApiResponse response = restTemplate.getForObject(url, YouTubeApiResponse.class);
-//
-//        if (response != null && !response.getItems().isEmpty()) {
-//            String fullTitle = response.getItems().get(0).getSnippet().getTitle();
-//            return extractSongTitle(fullTitle);
-//
-//        }
-//
-//        return null;
     }
 
-//    public static String extractSongTitle(String fullTitle) {
-//        // 1. 괄호 안에 한글 제목이 있는 경우 우선적으로 추출
-//        String koreanInBrackets = extractKoreanInBrackets(fullTitle);
-//        if (koreanInBrackets != null) {
-//            return koreanInBrackets.trim();
-//        }
-//
-//        // 2. 괄호와 괄호 안의 부가 정보 제거
-//        String title = fullTitle.replaceAll("\\s*\\([^)]*\\)", "").trim();
-//
-//        // 3. " - " 또는 " feat." 이후 제거
-//        title = title.split(" - ")[0].split("feat\\.", 2)[0].trim();
-//
-//        // 4. 영어/한글이 섞여 있을 경우 한글을 우선적으로 선택
-//        String koreanPart = extractKoreanPart(title);
-//        if (!koreanPart.isEmpty()) {
-//            title = koreanPart.trim();
-//        }
-//
-//        // 5. 불필요한 특수 문자 제거 (, ! ? 등)
-//        title = title.replaceAll("[,!?\\)]", "").trim(); // 불필요한 닫는 괄호 제거
-//
-//        return title;
-//    }
-//
-//    private static String extractKoreanInBrackets(String text) {
-//        // 괄호 안에 한글을 우선적으로 추출
-//        String regex = "\\(([^\\)\\(\\u0000-\\u007F]*)\\)";
-//        Matcher matcher = Pattern.compile(regex).matcher(text);
-//        if (matcher.find()) {
-//            return matcher.group(1);
-//        }
-//        return null;
-//    }
-//
-//    private static String extractKoreanPart(String text) {
-//        // 문자열에서 한글만 추출
-//        String regex = "[\\u3131-\\uD79D]+"; // 한글 범위
-//        Matcher matcher = Pattern.compile(regex).matcher(text);
-//        StringBuilder koreanBuilder = new StringBuilder();
-//        while (matcher.find()) {
-//            koreanBuilder.append(matcher.group()).append(" ");
-//        }
-//        return koreanBuilder.toString().trim();
-//    }
+    public boolean validateVideoTitle(String videoId, String guessTitle) {
+        String videoTitle = getVideoTitle(videoId);
+
+        // 유저 입력과 제목을 정리: 대소문자 무시, 공백 제거
+        String normalizedTitle = videoTitle.replaceAll("\\s+", "").toLowerCase();
+        String normalizedGuess = guessTitle.replaceAll("\\s+", "").toLowerCase();
+
+        return normalizedTitle.equals(normalizedGuess); // 정확히 비교
+    }
+
+    public String getPlayListVideosUrl(String playlistId) {
+        return UriComponentsBuilder.fromHttpUrl(YOUTUBE_API_URL)
+                .queryParam("part", "snippet")
+                .queryParam("playlistId", playlistId)
+                .queryParam("maxResults", 50)
+                .queryParam("key", apiKey)
+                .toUriString();
+    }
 }
 

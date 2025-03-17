@@ -19,27 +19,13 @@ import java.util.Map;
 @RequestMapping("/api")
 public class YoutubeController {
 
-    @Value("${YOUTUBE_KEY}")
-    private String apiKey;
-
     private final YoutubeService youtubeService;
-    private static final String YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/playlistItems";
 
 
-    @GetMapping
-    public ResponseEntity<String> searchVideo(@RequestParam String keyword) throws IOException {
-        String result = youtubeService.searchVideo(keyword);
-        return ResponseEntity.ok(result);
-    }
 
     @GetMapping("/playlist/{playlistId}")
     public ResponseEntity<?> getPlaylistVideos(@PathVariable String playlistId) {
-        String url = UriComponentsBuilder.fromHttpUrl(YOUTUBE_API_URL)
-                .queryParam("part", "snippet")
-                .queryParam("playlistId", playlistId)
-                .queryParam("maxResults", 50)
-                .queryParam("key", apiKey)
-                .toUriString();
+        String url = youtubeService.getPlayListVideosUrl(playlistId);
 
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
@@ -48,13 +34,7 @@ public class YoutubeController {
 
     @PostMapping("/validate-guess")
     public ResponseEntity<?> validateGuess(@RequestBody GuessRequest request) {
-        String videoTitle = youtubeService.getVideoTitle(request.videoId());
-
-        // 유저 입력과 제목을 정리: 대소문자 무시, 공백 제거
-        String normalizedTitle = videoTitle.replaceAll("\\s+", "").toLowerCase();
-        String normalizedGuess = request.userGuess().replaceAll("\\s+", "").toLowerCase();
-
-        boolean isCorrect = normalizedTitle.equals(normalizedGuess); // 정확히 비교
+        boolean isCorrect = youtubeService.validateVideoTitle(request.videoId(), request.userGuess());
 
         Map<String, Object> response = new HashMap<>();
         response.put("correct", isCorrect);
@@ -64,9 +44,9 @@ public class YoutubeController {
     @GetMapping("/video-title/{videoId}")
     public ResponseEntity<?> getVideoTitle(@PathVariable String videoId) {
         String videoTitle = youtubeService.getVideoTitle(videoId);
+
         Map<String, String> response = new HashMap<>();
         response.put("title", videoTitle);
-
         return ResponseEntity.ok(response);
     }
 

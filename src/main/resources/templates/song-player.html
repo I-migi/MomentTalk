@@ -29,18 +29,32 @@
     let player;
     let timer; // 타이머 변수
     let currentVideoId = null; // 현재 재생 중인 videoId
+    let playerReady = false; // 플레이어 초기화 상태를 확인하는 변수
+
 
     // YouTube Player 초기화
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('player', {
             videoId: '', // 초기화 시 비어 있음
+            events: {
+                'onReady': () => {
+                    playerReady = true; // 플레이어 준비 완료
+                    console.log("YouTube Player 준비 완료");
+                }
+            }
         });
     }
 
     // 랜덤 노래 재생
     async function playRandomVideo() {
-        clearTimeout(timer); // 이전 타이머 초기화
-        document.getElementById('feedback').innerText = ''; // 피드백 초기화
+        if (!playerReady) {
+            console.error("YouTube Player가 아직 준비되지 않았습니다.");
+            alert("YouTube Player를 초기화 중입니다. 잠시 후 다시 시도하세요.");
+            return;
+        }
+
+        clearTimeout(timer);
+        document.getElementById('feedback').innerText = '';
 
         const playlistId = document.getElementById('playlistId').value;
 
@@ -66,6 +80,7 @@
             console.error("Error playing random video:", error);
         }
     }
+
 
     // 정답 검증
     async function submitGuess() {
@@ -97,6 +112,7 @@
         }
     }
 
+
     // 30초 타이머 로직
     function startTimer() {
         console.log(`타이머 시작. Video ID: ${currentVideoId}`);
@@ -115,6 +131,18 @@
             }
         }, 30000); // 30초 후 실행
     }
+
+    // DOMContentLoaded 이벤트로 초기화 강제 실행
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof YT === 'undefined' || typeof YT.Player === 'undefined') {
+            console.log("YouTube API가 아직 로드되지 않았습니다. API 초기화를 기다립니다.");
+            const scriptTag = document.createElement('script');
+            scriptTag.src = "https://www.youtube.com/iframe_api";
+            document.body.appendChild(scriptTag);
+        } else {
+            onYouTubeIframeAPIReady(); // 이미 API가 로드된 경우 즉시 실행
+        }
+    });
 
     // 이벤트 리스너 등록
     document.getElementById('playRandom').addEventListener('click', playRandomVideo);

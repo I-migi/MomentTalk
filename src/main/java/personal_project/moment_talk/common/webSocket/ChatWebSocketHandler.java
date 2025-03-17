@@ -31,7 +31,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         } else if (path.startsWith("/ws/group") || path.startsWith("/ws/music-game")) {
             String httpSessionId = webSocketHelper.getHttpSessionIdFromWebSocketSession(webSocketSession);
             webSocketSessionManager.addSession(httpSessionId, webSocketSession);
-            groupWebSocketHelper.handleGroupConnection(webSocketSession);
         }
     }
 
@@ -44,9 +43,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
         if (path.startsWith("/ws/connect")) {
             oneToOneWebSocketHelper.handleOneToOneMessage(webSocketSession, message, httpSessionId, userName);
-        } else if (path.startsWith("/ws/group") || path.startsWith("/ws/music-game")) {
+        } else if (path.startsWith("/ws/group")){
             groupWebSocketHelper.handleGroupMessage(webSocketSession, message, path, httpSessionId, userName);
-
+        } else if (path.startsWith("/ws/music-game")) {
+            groupWebSocketHelper.handleMusicGameMessage(webSocketSession, message, path, httpSessionId, userName);
         }
     }
 

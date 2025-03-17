@@ -49,7 +49,141 @@
     </div>
 </div>
 
+<div>
+    <button id="playRandom">랜덤으로 노래 재생</button>
+    <input type="text" id="guessInput" placeholder="정답 입력">
+    <button id="submitGuess">정답 제출</button>
+    <p id="feedback"></p> <!-- 정답 여부 또는 답 표시 -->
+    <input type="hidden" id="playlistId" value="PLQTluIJ3cY_bmFMSuu2QTbbSfGBmjzJkb">
+</div>
+<div id="player"></div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+
 <!-- Scripts -->
 <script src="/js/music-game.js" th:src="@{/js/music-game.js}"></script>
+<script>
+    let player;
+    let timer; // 타이머 변수
+    let currentVideoId = null; // 현재 재생 중인 videoId
+    let playerReady = false; // 플레이어 초기화 상태를 확인하는 변수
+
+
+    // YouTube Player 초기화
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+            videoId: '', // 초기화 시 비어 있음
+            events: {
+                'onReady': () => {
+                    playerReady = true; // 플레이어 준비 완료
+                    console.log("YouTube Player 준비 완료");
+                }
+            }
+        });
+    }
+
+    // 랜덤 노래 재생
+    async function playRandomVideo() {
+        if (!playerReady) {
+            console.error("YouTube Player가 아직 준비되지 않았습니다.");
+            alert("YouTube Player를 초기화 중입니다. 잠시 후 다시 시도하세요.");
+            return;
+        }
+
+        clearTimeout(timer);
+        document.getElementById('feedback').innerText = '';
+
+        const playlistId = document.getElementById('playlistId').value;
+
+        try {
+            const response = await fetch(`/api/playlist/${playlistId}`);
+            if (!response.ok) throw new Error("Failed to fetch playlist videos.");
+
+            const data = await response.json();
+            const videoIds = data.items.map(item => item.snippet.resourceId.videoId);
+
+            if (videoIds.length > 0) {
+                currentVideoId = videoIds[Math.floor(Math.random() * videoIds.length)];
+                console.log(`재생할 Video ID: ${currentVideoId}`); // 현재 videoId 출력
+                player.loadVideoById(currentVideoId);
+                player.playVideo();
+
+                // 30초 타이머 시작
+                startTimer();
+            } else {
+                alert("재생 가능한 동영상이 없습니다.");
+            }
+        } catch (error) {
+            console.error("Error playing random video:", error);
+        }
+    }
+
+
+    // 정답 검증
+    async function submitGuess() {
+        const guess = document.getElementById('guessInput').value.trim();
+        if (!guess) {
+            alert("정답을 입력하세요.");
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/validate-guess', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ videoId: currentVideoId, userGuess: guess }),
+            });
+
+            const result = await response.json();
+            if (result.correct) {
+                clearTimeout(timer); // 타이머 정지
+                console.log(`정답 맞춤! Video ID: ${currentVideoId}, 정답: ${guess}`);
+                document.getElementById('feedback').innerText = "정답입니다!";
+                playRandomVideo(); // 다음 영상 재생
+            } else {
+                console.log(`틀림! Video ID: ${currentVideoId}, 입력값: ${guess}`);
+                document.getElementById('feedback').innerText = "틀렸습니다.";
+            }
+        } catch (error) {
+            console.error("Error validating guess:", error);
+        }
+    }
+
+
+    // 30초 타이머 로직
+    function startTimer() {
+        console.log(`타이머 시작. Video ID: ${currentVideoId}`);
+        timer = setTimeout(async () => {
+            try {
+                console.log(`타이머 종료. Video ID: ${currentVideoId}`);
+                const response = await fetch(`/api/video-title/${currentVideoId}`);
+                if (!response.ok) throw new Error("Failed to fetch video title.");
+
+                const data = await response.json();
+                console.log(`정답 전송됨: ${data.title}, Video ID: ${currentVideoId}`);
+                document.getElementById('feedback').innerText = `정답: ${data.title}`;
+                playRandomVideo(); // 다음 영상 재생
+            } catch (error) {
+                console.error("Error fetching video title:", error);
+            }
+        }, 30000); // 30초 후 실행
+    }
+
+    // DOMContentLoaded 이벤트로 초기화 강제 실행
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof YT === 'undefined' || typeof YT.Player === 'undefined') {
+            console.log("YouTube API가 아직 로드되지 않았습니다. API 초기화를 기다립니다.");
+            const scriptTag = document.createElement('script');
+            scriptTag.src = "https://www.youtube.com/iframe_api";
+            document.body.appendChild(scriptTag);
+        } else {
+            onYouTubeIframeAPIReady(); // 이미 API가 로드된 경우 즉시 실행
+        }
+    });
+
+    // 이벤트 리스너 등록
+    document.getElementById('playRandom').addEventListener('click', playRandomVideo);
+    document.getElementById('submitGuess').addEventListener('click', submitGuess);
+</script>
 </body>
 </html>
