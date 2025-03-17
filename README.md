@@ -6,46 +6,30 @@
 
 ## 🚀 주요 기능
 
-1. **주제 기반 매칭**
-    - 사용자가 특정 관심사나 주제를 선택하면 관련된 사용자와 연결됩니다.
-    - 고민 상담과 같은 목적 중심의 대화에 적합한 환경을 제공합니다.
-
-2. **미니 게임 랜덤 채팅**
-    - 대화 도중 간단한 미니 게임을 즐길 수 있어 새로운 대화 경험을 제공합니다.
-    - 게임으로 친밀도를 높이고 대화의 재미를 더합니다.
-
-3. **익명 투표 및 토론**
-    - 단체 채팅방에서 익명으로 투표하거나 의견을 나눌 수 있는 기능을 지원합니다.
-    - 다양한 관점에서 의견을 교환할 수 있는 안전한 환경을 제공합니다.
-
-4. **즉석 연결**
-    - 로그인 없이 즉석에서 사용자를 연결하여 대화가 가능한 간편한 플랫폼입니다.
-    - 부담 없이 빠르게 접속하고 연결됩니다.
-
-5. **미디어 공유**
-    - 채팅 중 유튜브 영상과 이미지를 업로드하거나 공유할 수 있습니다.
-    - AWS S3를 사용하여 안정적인 미디어 공유 환경을 지원합니다.
-
-6. **글로벌 소통**
-    - 채팅 내 실시간 번역 기능을 제공하여 전 세계 사용자와 언어 장벽 없이 소통 가능합니다.
-
-7. **부적절 메시지 필터링**
-    - 욕설 및 부적절한 콘텐츠를 필터링하여 안전한 커뮤니티 환경을 조성합니다.
-
-8. **시간 제한 메시지**
-    - 채팅 중 일정 시간(1분)이 지난 메시지는 자동으로 사라지며, Redis를 활용하여 효율적으로 관리합니다.
+1. **1대1 채팅**
+    - 레디스와 큐를 이용해 다른 사용자와 채팅을 할 수 있는 기능
+2. **그룹 채팅**
+    - 원하는 주제에 대해 많은 사람들과 대화를 나눌 수 있는 그룹 채팅 기능
+3. **사진 및 영상 공유**
+    - 채팅뿐만이 아니라 사진이나 영상을 다른 사용자와 공유할 수 있는 기능
+4. **번역 기능**
+    - 서비스의 글로버화를 위해 영한번역, 한영번역 기능 제공
+5. **부적절 메시지 필터링**
+    - 건전한 소통을 위해 욕설과 같은 부적절한 메시지들을 필터링
+6. **노래 밎추기 게임**
+    - 유튜브 API를 사용해 특정 재생목록을 지정해 노래를 재생하고, 제목을 맞추며 경쟁할 수 있는 기능
 
 ---
 
 ## 💡 기술 스택
 
-- **Frontend**: React, Next.js
-- **Backend**: Node.js, Express
-- **Database**: Redis, MongoDB
-- **Cloud**: AWS (S3, Lambda 등)
+- **Frontend**: HTML, CSS, JavaScript, Thymeleaf
+- **Backend**: Spring Boot Framework, java 17
+- **Database**: Redis, MySQL
 - **실시간 통신**: WebSocket
-- **번역 API**: Google Translate API (or other translation services)
-- **필터링**: NLP 기반 부적절 메시지 필터링 기술
+- 🖥️번역 API**: DeepLTranslationAPI
+- **필터링**: badwordfilteringAPI
+- **노래재생**: YoutubeAPI
 
 ---
 
@@ -55,10 +39,18 @@ MomentTalk은 사용자들이 주제나 관심사에 따라 즉시 연결되고,
 
 ---
 
-## 📦 설치 및 실행
+## 🖥️ 서비스 화면
 
-1. **클론 및 의존성 설치**
-   ```bash
-   git clone https://github.com/your-repo/momenttalk.git
-   cd momenttalk
-   npm install
+![image](https://github.com/user-attachments/assets/1e3de3fe-745b-4a37-823b-8ace00a419fd)
+
+![image](https://github.com/user-attachments/assets/14f20ee4-e549-4e37-8869-fe9af2903171)
+
+![image](https://github.com/user-attachments/assets/92a7c32a-4a28-4a80-a21d-997ba99f75ff)
+
+![image](https://github.com/user-attachments/assets/983b2062-69f8-47a7-86cf-94f95a9e3f02)
+
+
+
+
+
+
