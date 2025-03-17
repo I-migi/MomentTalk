@@ -73,6 +73,25 @@ public class GroupWebSocketHelper {
         }
     }
 
+    public void handleMusicGameMessage(WebSocketSession webSocketSession, WebSocketMessage<?> message, String path, String httpSessionId, String userName) throws IOException {
+
+        String[] segments = path.split("/");
+        String roomId = segments[segments.length - 1];
+
+        Set<Object> participantHttpSessionIds = groupChatParticipants.getParticipants(roomId);
+        participantHttpSessionIds.remove(httpSessionId);
+
+        List<WebSocketSession> participantWebSocketSessions = new ArrayList<>();
+        for (Object participantSessionId : participantHttpSessionIds) {
+            WebSocketSession participantWebSocketSession = webSocketSessionManager.getSession((String) participantSessionId);
+            if (participantWebSocketSession != null) {
+                participantWebSocketSessions.add(participantWebSocketSession);
+            }
+        }
+        handleTextMessageGroup(message, userName, participantWebSocketSessions);
+
+    }
+
     private static void handleBinaryMessageGroup(WebSocketSession webSocketSession, WebSocketMessage<?> message, List<WebSocketSession> participantWebSocketSessions) throws IOException {
         try {
 

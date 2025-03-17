@@ -118,6 +118,11 @@ function handleWebSocketMessage(event) {
                 case "text":
                     displayMessage(parsedData.content, "received", parsedData.userName || "Unknown");
                     break;
+                case "game-result":
+                    if (parsedData.correct) {
+                        displayMessage(`정답: ${parsedData.correctAnswer}`, "system");
+                    }
+                    break;
                 case "user-joined":
                     displayMessage(parsedData.content, "system"); // 사용자 입장 메시지
                     break;
@@ -149,18 +154,34 @@ function sendMessage() {
         console.error("WebSocket is not open. Unable to send the message.");
         return;
     }
-
+    const roomId = sessionStorage.getItem("roomId");
     // 메시지 객체 생성
     const messageData = {
         type: "text",
         content: message,
         timestamp: new Date().toISOString(), // 전송 시간
+        roomId
     };
 
     try {
         socket.send(JSON.stringify(messageData)); // WebSocket으로 메시지 전송
         displayMessage(message, "sent");
         messageInput.value = ""; // 입력창 초기화
+
+        fetch('api/validate-guess', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({videoId: currentVideoId, userGuess: message})
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.correct) {
+                    displayMessage("정답입니다! 다음 문제로 이동합니다.", "system");
+                    playRandomVideo();
+                } else {
+                    displayMessage("틀렸습니다", "system");
+                }
+            });
     } catch (error) {
         console.error("Error sending message:", error);
     }
